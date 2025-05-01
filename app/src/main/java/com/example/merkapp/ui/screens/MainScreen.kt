@@ -29,51 +29,62 @@ private val TextColor = Color(0xFF314401)       // #314401
 private val PanelColor = Color(0xFFDAA51E)      // #DAA51E
 private val ProductPanelColor = Color(0xFFD4A76A) // Un tono más oscuro que BackgroundColor
 
-// Definición de íconos para productos
-private fun getProductIcon(product: String): ImageVector {
+// Función para obtener el ID del recurso del ícono
+private fun getProductIconResource(product: String): Int {
     return when (product.lowercase()) {
         // Proteínas
-        "carne" -> Icons.Outlined.Restaurant
-        "pollo" -> Icons.Outlined.Restaurant
-        "pescado" -> Icons.Outlined.SetMeal
-        "huevos" -> Icons.Outlined.EggAlt
+        "carne" -> R.drawable.ic_carne
+        "pollo" -> R.drawable.ic_pollo
+        "pescado" -> R.drawable.ic_pescado
+        "huevos" -> R.drawable.ic_huevos
 
         // Víveres
-        "avena" -> Icons.Outlined.RiceBowl
-        "azúcar" -> Icons.Outlined.Coffee
-        "sal" -> Icons.Outlined.Kitchen
-        "maíz" -> Icons.Outlined.Grass
-        "aceite" -> Icons.Outlined.WaterDrop
-        "te" -> Icons.Outlined.EmojiFoodBeverage
-        "cafe" -> Icons.Outlined.Coffee
-        "galletas" -> Icons.Outlined.Cookie
-        "tostadas" -> Icons.Outlined.BakeryDining
+        "avena" -> R.drawable.ic_avena
+        "azúcar" -> R.drawable.ic_azucar
+        "sal" -> R.drawable.ic_sal
+        "maíz" -> R.drawable.ic_maiz
+        "aceite" -> R.drawable.ic_aceite
+        "te" -> R.drawable.ic_te
+        "cafe" -> R.drawable.ic_cafe
+        "galletas" -> R.drawable.ic_galletas
+        "tostadas" -> R.drawable.ic_tostadas
 
         // Frutas y verduras
-        "pera", "manzanas" -> Icons.Outlined.Apple
-        "piña", "sandia", "mango" -> Icons.Outlined.Spa
-        "banano", "uvas", "arándanos" -> Icons.Outlined.Apple
-        "espinacas", "brócoli", "lechuga", "apio" -> Icons.Outlined.Grass
-        "zanahoria", "tomate", "pepino", "ahuyama" -> Icons.Outlined.Eco
+        "pera" -> R.drawable.ic_pera
+        "piña" -> R.drawable.ic_pina
+        "banano" -> R.drawable.ic_banano
+        "arándanos" -> R.drawable.ic_arandanos
+        "sandia" -> R.drawable.ic_sandia
+        "mango" -> R.drawable.ic_mango
+        "uvas" -> R.drawable.ic_uvas
+        "manzanas" -> R.drawable.ic_manzana
+        "espinacas" -> R.drawable.ic_espinacas
+        "brócoli" -> R.drawable.ic_brocoli
+        "zanahoria" -> R.drawable.ic_zanahoria
+        "lechuga" -> R.drawable.ic_lechuga
+        "tomate" -> R.drawable.ic_tomate
+        "apio" -> R.drawable.ic_apio
+        "pepino" -> R.drawable.ic_pepino
+        "ahuyama" -> R.drawable.ic_ahuyama
 
         // Aseo
-        "escoba" -> Icons.Outlined.CleaningServices
-        "recogedor" -> Icons.Outlined.CleaningServices
-        "esponjas" -> Icons.Outlined.Wash
-        "guantes" -> Icons.Outlined.CleanHands
-        "limpia vidrios" -> Icons.Outlined.CleaningServices
-        "trapeador" -> Icons.Outlined.CleaningServices
+        "escoba" -> R.drawable.ic_escoba
+        "recogedor" -> R.drawable.ic_recogedor
+        "esponjas" -> R.drawable.ic_esponjas
+        "guantes" -> R.drawable.ic_guantes
+        "limpia vidrios" -> R.drawable.ic_limpiavidrios
+        "trapeador" -> R.drawable.ic_trapeador
 
         // Lácteos
-        "leche" -> Icons.Outlined.LocalDrink
-        "queso" -> Icons.Outlined.LocalPizza
-        "yogurt" -> Icons.Outlined.LocalDrink
-        "mantequilla" -> Icons.Outlined.Kitchen
-        "crema de leche" -> Icons.Outlined.LocalDrink
-        "kumis" -> Icons.Outlined.LocalDrink
+        "leche" -> R.drawable.ic_leche
+        "queso" -> R.drawable.ic_queso
+        "yogurt" -> R.drawable.ic_yogurt
+        "mantequilla" -> R.drawable.ic_mantequilla
+        "crema de leche" -> R.drawable.ic_crema_leche
+        "kumis" -> R.drawable.ic_kumis
 
         // Ícono por defecto
-        else -> Icons.Outlined.ShoppingCart
+        else -> R.drawable.ic_producto_default
     }
 }
 
@@ -329,10 +340,9 @@ fun MainScreen(navController: NavHostController, userName: String = "Cliente") {
                                                     )
                                                 )
                                                 
-                                                Icon(
-                                                    imageVector = getProductIcon(product),
+                                                Image(
+                                                    painter = painterResource(id = getProductIconResource(product)),
                                                     contentDescription = null,
-                                                    tint = TextColor,
                                                     modifier = Modifier
                                                         .size(24.dp)
                                                         .padding(end = 8.dp)
