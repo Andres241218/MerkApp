@@ -112,5 +112,19 @@ fun MainScreen(navController: NavHostController, userName: String = "Cliente") {
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón "Mi Lista"
+        Button(
+            onClick = {
+                val selectedItems = productSelections.filterValues { it.first && it.second.isNotBlank() }
+                navController.currentBackStackEntry?.savedStateHandle?.set("selectedItems", selectedItems)
+                navController.navigate("list")
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Mi Lista")
+        }
     }
 }
