@@ -7,10 +7,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 
+// Importar el ViewModel y modelo (si están en el mismo archivo, omite esto)
+import com.example.merkapp.ui.screens.UserViewModel
+
 @Composable
-fun LoginScreen(navController: NavHostController) {
+fun LoginScreen(
+    navController: NavHostController,
+    userViewModel: UserViewModel
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -55,13 +62,20 @@ fun LoginScreen(navController: NavHostController) {
                 errorMessage = when {
                     email.isBlank() || password.isBlank() ->
                         "Por favor completa todos los campos"
-                    // Aquí podrías agregar lógica de autenticación real
-                    else -> null
-                }
-
-                if (errorMessage == null) {
-                    navController.navigate("main") {
-                        popUpTo("login") { inclusive = true }
+                    else -> {
+                        // Buscar el usuario en la lista
+                        val user = userViewModel.users.find {
+                            it.email == email && it.password == password
+                        }
+                        if (user != null) {
+                            // Navegar si el usuario existe
+                            navController.navigate("main") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                            null // No hay error
+                        } else {
+                            "Correo o contraseña incorrectos"
+                        }
                     }
                 }
             },

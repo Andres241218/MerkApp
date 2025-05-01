@@ -7,10 +7,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 
+// Modelo de datos
+data class User(
+    val name: String,
+    val email: String,
+    val password: String
+)
+
+// ViewModel que guarda los usuarios
+class UserViewModel : ViewModel() {
+    private val _users = mutableStateListOf<User>()
+    val users: List<User> get() = _users
+
+    fun addUser(user: User) {
+        _users.add(user)
+    }
+}
+
 @Composable
-fun RegisterScreen(navController: NavHostController) {
+fun RegisterScreen(
+    navController: NavHostController,
+    userViewModel: UserViewModel
+) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -64,7 +86,6 @@ fun RegisterScreen(navController: NavHostController) {
             modifier = Modifier.fillMaxWidth()
         )
 
-        // Mostramos el error si existe
         errorMessage?.let {
             Spacer(modifier = Modifier.height(8.dp))
             Text(it, color = MaterialTheme.colorScheme.error)
@@ -74,7 +95,6 @@ fun RegisterScreen(navController: NavHostController) {
 
         Button(
             onClick = {
-                // Validación básica
                 errorMessage = when {
                     name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank() ->
                         "Todos los campos son obligatorios"
@@ -84,7 +104,7 @@ fun RegisterScreen(navController: NavHostController) {
                 }
 
                 if (errorMessage == null) {
-                    // Aquí iría lógica para guardar usuario (si fuera necesario)
+                    userViewModel.addUser(User(name, email, password))
                     navController.navigate("login") {
                         popUpTo("register") { inclusive = true }
                     }

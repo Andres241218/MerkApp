@@ -10,6 +10,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.merkapp.ui.screens.*
 import com.example.merkapp.ui.theme.MerkAppTheme
+import com.example.merkapp.ui.screens.UserViewModel
+import androidx.compose.runtime.remember
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,23 +20,25 @@ class MainActivity : ComponentActivity() {
         setContent {
             MerkAppTheme {
                 val navController = rememberNavController()
-                AppNavigation(navController)
+                val userViewModel = remember { UserViewModel() } // instancia única compartida
+                AppNavigation(navController, userViewModel)
             }
         }
     }
 }
 
+
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(navController: NavHostController, userViewModel: UserViewModel) {
     NavHost(navController = navController, startDestination = "splash") {
         composable("splash") {
             SplashScreen(navController)
         }
         composable("login") {
-            LoginScreen(navController)
+            LoginScreen(navController, userViewModel)
         }
         composable("register") {
-            RegisterScreen(navController)
+            RegisterScreen(navController, userViewModel)
         }
         composable("forgotPassword") {
             ForgotPasswordScreen(navController)
