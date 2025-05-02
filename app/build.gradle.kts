@@ -65,6 +65,9 @@ dependencies {
     // Material 3
     implementation("androidx.compose.material3:material3:1.2.1")
 
+    // Compose Foundation (para scroll y otros elementos básicos)
+    implementation("androidx.compose.foundation:foundation:1.5.1")
+
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
 

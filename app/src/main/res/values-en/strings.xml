@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MerkApp</string>
+    
+    <!-- Titles -->
+    <string name="title_home">Home</string>
+    <string name="title_my_lists">My Lists</string>
+    <string name="title_settings">Settings</string>
+    
+    <!-- Buttons -->
+    <string name="btn_finish_purchase">Finish purchase</string>
+    <string name="btn_back_to_home">Back to home</string>
+    <string name="btn_understood">Understood</string>
+    <string name="btn_change_language">Switch to Spanish</string>
+    
+    <!-- Messages -->
+    <string name="msg_no_products">No products selected.</string>
+    <string name="msg_products_not_found">Products not found</string>
+    <string name="msg_all_products_found">Great! You found all products.</string>
+    <string name="msg_following_not_found">The following products were not found:</string>
+    
+    <!-- Settings -->
+    <string name="settings_language">Language</string>
+    <string name="settings_current_language">Current language: %s</string>
+    <string name="language_spanish">Spanish</string>
+    <string name="language_english">English</string>
+</resources> 

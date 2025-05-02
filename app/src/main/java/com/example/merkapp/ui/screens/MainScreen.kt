@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import com.example.merkapp.R
+import com.example.merkapp.ui.components.BottomNavBar
+import com.example.merkapp.ui.viewmodels.UserViewModel
 
 // Definición de colores personalizados
 private val BackgroundColor = Color(0xFFDEB887) // #DEB887
@@ -90,8 +92,10 @@ private fun getProductIconResource(product: String): Int {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController, userName: String = "Cliente") {
+fun MainScreen(navController: NavHostController, userViewModel: UserViewModel) {
     var showInstructions by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+    val uiState by userViewModel.uiState.collectAsState()
 
     val sections = listOf(
         "Proteína" to listOf("Carne", "Pollo", "Pescado", "Huevos"),
@@ -207,181 +211,187 @@ fun MainScreen(navController: NavHostController, userName: String = "Cliente") {
         modifier = Modifier.fillMaxSize(),
         color = BackgroundColor
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+                    .padding(bottom = 80.dp) // Espacio para el menú de navegación
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "MerkApp Logo",
-                        modifier = Modifier
-                            .size(120.dp) // Aumentado el tamaño del logo
-                            .padding(bottom = 16.dp)
-                    )
-
-                    Text(
-                        "Hola $userName",
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = TextColor,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                // Botón de información en la esquina superior derecha
-                IconButton(
-                    onClick = { showInstructions = true },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = ButtonColor,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "Instrucciones",
-                            tint = Color.Black,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .size(24.dp)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Resto del contenido permanece igual
-            sections.forEach { (section, products) ->
-                ElevatedCard(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    onClick = {
-                        expandedSections[section] = !(expandedSections[section] ?: false)
-                    },
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = PanelColor
-                    )
+                        .padding(top = 16.dp, bottom = 32.dp)
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "MerkApp Logo",
+                            modifier = Modifier
+                                .size(120.dp) // Aumentado el tamaño del logo
+                                .padding(bottom = 16.dp)
+                        )
+
+                        Text(
+                            "¡Hola ${uiState.userName}!",
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = TextColor,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    // Botón de información en la esquina superior derecha
+                    IconButton(
+                        onClick = { showInstructions = true },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
                     ) {
                         Surface(
-                            color = PanelColor,
-                            modifier = Modifier.fillMaxWidth()
+                            shape = CircleShape,
+                            color = ButtonColor,
+                            modifier = Modifier.size(40.dp)
                         ) {
-                            Text(
-                                text = section,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = TextColor,
-                                modifier = Modifier.padding(16.dp)
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Instrucciones",
+                                tint = Color.Black,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(24.dp)
                             )
                         }
+                    }
+                }
 
-                        if (expandedSections[section] == true) {
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Resto del contenido permanece igual
+                sections.forEach { (section, products) ->
+                    ElevatedCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        onClick = {
+                            expandedSections[section] = !(expandedSections[section] ?: false)
+                        },
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = PanelColor
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Surface(
-                                color = BackgroundColor,
+                                color = PanelColor,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp)
-                                ) {
-                                    products.forEach { product ->
-                                        val selection = productSelections[product] ?: (false to "")
-                                        var isChecked by remember { mutableStateOf(selection.first) }
-                                        var quantity by remember { mutableStateOf(selection.second) }
+                                Text(
+                                    text = section,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = TextColor,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
 
-                                        Card(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 4.dp),
-                                            colors = CardDefaults.cardColors(
-                                                containerColor = ProductPanelColor
-                                            ),
-                                            elevation = CardDefaults.cardElevation(
-                                                defaultElevation = 2.dp
-                                            )
-                                        ) {
-                                            Row(
+                            if (expandedSections[section] == true) {
+                                Surface(
+                                    color = BackgroundColor,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp)
+                                    ) {
+                                        products.forEach { product ->
+                                            val selection = productSelections[product] ?: (false to "")
+                                            var isChecked by remember { mutableStateOf(selection.first) }
+                                            var quantity by remember { mutableStateOf(selection.second) }
+
+                                            Card(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                                    .padding(vertical = 4.dp),
+                                                colors = CardDefaults.cardColors(
+                                                    containerColor = ProductPanelColor
+                                                ),
+                                                elevation = CardDefaults.cardElevation(
+                                                    defaultElevation = 2.dp
+                                                )
                                             ) {
-                                                Checkbox(
-                                                    checked = isChecked,
-                                                    onCheckedChange = {
-                                                        isChecked = it
-                                                        productSelections[product] = isChecked to quantity
-                                                    },
-                                                    colors = CheckboxDefaults.colors(
-                                                        checkedColor = ButtonColor,
-                                                        uncheckedColor = TextColor
-                                                    )
-                                                )
-                                                
-                                                Image(
-                                                    painter = painterResource(id = getProductIconResource(product)),
-                                                    contentDescription = null,
+                                                Row(
                                                     modifier = Modifier
-                                                        .size(24.dp)
-                                                        .padding(end = 8.dp)
-                                                )
-                                                
-                                                Text(
-                                                    text = product,
-                                                    modifier = Modifier
-                                                        .weight(1f)
-                                                        .padding(horizontal = 8.dp),
-                                                    color = TextColor,
-                                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                                        fontWeight = FontWeight.SemiBold
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Checkbox(
+                                                        checked = isChecked,
+                                                        onCheckedChange = {
+                                                            isChecked = it
+                                                            productSelections[product] = isChecked to quantity
+                                                        },
+                                                        colors = CheckboxDefaults.colors(
+                                                            checkedColor = ButtonColor,
+                                                            uncheckedColor = TextColor
+                                                        )
                                                     )
-                                                )
-                                                OutlinedTextField(
-                                                    value = quantity,
-                                                    onValueChange = {
-                                                        quantity = it
-                                                        productSelections[product] = isChecked to quantity
-                                                    },
-                                                    label = {
-                                                        Text(
-                                                            "Cantidad",
-                                                            color = TextColor,
+                                                    
+                                                    Image(
+                                                        painter = painterResource(id = getProductIconResource(product)),
+                                                        contentDescription = null,
+                                                        modifier = Modifier
+                                                            .size(24.dp)
+                                                            .padding(end = 8.dp)
+                                                    )
+                                                    
+                                                    Text(
+                                                        text = product,
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .padding(horizontal = 8.dp),
+                                                        color = TextColor,
+                                                        style = MaterialTheme.typography.bodyLarge.copy(
                                                             fontWeight = FontWeight.SemiBold
                                                         )
-                                                    },
-                                                    modifier = Modifier.width(100.dp),
-                                                    singleLine = true,
-                                                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                                                        focusedTextColor = TextColor,
-                                                        unfocusedTextColor = TextColor,
-                                                        focusedBorderColor = ButtonColor,
-                                                        unfocusedBorderColor = TextColor,
-                                                        focusedLabelColor = ButtonColor,
-                                                        unfocusedLabelColor = TextColor
                                                     )
-                                                )
+                                                    OutlinedTextField(
+                                                        value = quantity,
+                                                        onValueChange = {
+                                                            quantity = it
+                                                            productSelections[product] = isChecked to quantity
+                                                        },
+                                                        label = {
+                                                            Text(
+                                                                "Cantidad",
+                                                                color = TextColor,
+                                                                fontWeight = FontWeight.SemiBold
+                                                            )
+                                                        },
+                                                        modifier = Modifier.width(100.dp),
+                                                        singleLine = true,
+                                                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                                                            focusedTextColor = TextColor,
+                                                            unfocusedTextColor = TextColor,
+                                                            focusedBorderColor = ButtonColor,
+                                                            unfocusedBorderColor = TextColor,
+                                                            focusedLabelColor = ButtonColor,
+                                                            unfocusedLabelColor = TextColor
+                                                        )
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -390,42 +400,50 @@ fun MainScreen(navController: NavHostController, userName: String = "Cliente") {
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = {
-                    try {
-                        val selectedItems = productSelections.toMap().filter {
-                            it.value.first && it.value.second.isNotBlank()
+                Button(
+                    onClick = {
+                        try {
+                            val selectedItems = productSelections.toMap().filter {
+                                it.value.first && it.value.second.isNotBlank()
+                            }
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                "selectedItems",
+                                selectedItems
+                            )
+                            if (selectedItems.isNotEmpty()) {
+                                navController.navigate("list")
+                            }
+                        } catch (e: Exception) {
+                            // Manejo de errores
                         }
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            "selectedItems",
-                            selectedItems
-                        )
-                        if (selectedItems.isNotEmpty()) {
-                            navController.navigate("list")
-                        }
-                    } catch (e: Exception) {
-                        // Manejo de errores
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ButtonColor,
-                    contentColor = TextColor
-                )
-            ) {
-                Text(
-                    "Mi lista",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ButtonColor,
+                        contentColor = TextColor
                     )
-                )
+                ) {
+                    Text(
+                        "Mi lista",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp)) // Espacio extra al final
             }
+
+            // El menú de navegación siempre estará en la parte inferior
+            BottomNavBar(
+                navController = navController,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }
