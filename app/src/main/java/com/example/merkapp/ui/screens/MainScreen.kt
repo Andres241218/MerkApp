@@ -93,6 +93,9 @@ private fun getProductIconResource(product: String): Int {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavHostController, userViewModel: UserViewModel) {
+    LaunchedEffect(Unit) {
+        userViewModel.refreshUser()
+    }
     var showInstructions by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val uiState by userViewModel.uiState.collectAsState()

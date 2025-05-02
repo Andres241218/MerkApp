@@ -37,6 +37,8 @@ fun MyListsScreen(
     val lists by viewModel.shoppingLists.collectAsState()
     var selectedList by remember { mutableStateOf<ShoppingList?>(null) }
     var showDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showDeleteSuccessDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(showDialog) {
         if (!showDialog) {
@@ -242,6 +244,35 @@ fun MyListsScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(
+                            onClick = { showDeleteConfirmDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6961)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Eliminar", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Button(
+                            onClick = {
+                                // Pasar la lista seleccionada a la vista Mi lista
+                                val itemsToSend = selectedList!!.items.mapValues { (k, v) -> true to v.quantity }
+                                navController.currentBackStackEntry?.savedStateHandle?.set("selectedItems", itemsToSend)
+                                showDialog = false
+                                navController.navigate("list")
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = ButtonColor),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Agregar", color = TextColor, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Button(
                         onClick = { 
                             showDialog = false
@@ -253,6 +284,92 @@ fun MyListsScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Cerrar")
+                    }
+                }
+            }
+        }
+    }
+
+    // Confirmación para eliminar lista
+    if (showDeleteConfirmDialog && selectedList != null) {
+        Dialog(onDismissRequest = { showDeleteConfirmDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = BackgroundColor)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "¿Estás seguro de eliminar esta lista?",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = TextColor,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(
+                            onClick = {
+                                // Eliminar la lista
+                                viewModel.deleteList(selectedList!!)
+                                showDeleteConfirmDialog = false
+                                showDialog = false
+                                showDeleteSuccessDialog = true
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6961)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Eliminar", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Button(
+                            onClick = { showDeleteConfirmDialog = false },
+                            colors = ButtonDefaults.buttonColors(containerColor = ButtonColor),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Cancelar", color = TextColor, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Feedback de éxito al eliminar lista
+    if (showDeleteSuccessDialog) {
+        Dialog(onDismissRequest = { showDeleteSuccessDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = BackgroundColor)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Lista eliminada con éxito",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = TextColor,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { showDeleteSuccessDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    ) {
+                        Text("Aceptar", color = TextColor, fontWeight = FontWeight.Bold)
                     }
                 }
             }

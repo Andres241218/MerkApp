@@ -69,4 +69,10 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
+
+    fun refreshUser() {
+        _uiState.value = _uiState.value.copy(
+            userName = userPreferences.getUserName()
+        )
+    }
 } 

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,11 +28,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.merkapp.ui.viewmodels.ShoppingListViewModel
+import androidx.compose.foundation.clickable
 
 private val BackgroundColor = Color(0xFFDEB887) // #DEB887
 private val ButtonColor = Color(0xFFCE8540)     // #CE8540
 private val TextColor = Color(0xFF314401)       // #314401
 private val CardColor = Color(0xFFD4A76A)       // #D4A76A
+private val PanelColor = Color(0xFFDAA51E)      // #DAA51E
 
 data class ProductState(
     val isFound: Boolean = false,
@@ -49,6 +52,20 @@ fun ListScreen(
     var showInstructions by remember { mutableStateOf(false) }
     var showMissingProducts by remember { mutableStateOf(false) }
     var showCompletionDialog by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
+    var showAddProductDialog by remember { mutableStateOf(false) }
+    var newProductName by remember { mutableStateOf("") }
+    var newProductQuantity by remember { mutableStateOf("") }
+    var showAddSuccessDialog by remember { mutableStateOf(false) }
+    var showEditProductDialog by remember { mutableStateOf(false) }
+    var showEditQuantityDialog by remember { mutableStateOf(false) }
+    var productToEdit by remember { mutableStateOf("") }
+    var newEditQuantity by remember { mutableStateOf("") }
+    var showEditSuccessDialog by remember { mutableStateOf(false) }
+    var showDeleteProductDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var productToDelete by remember { mutableStateOf("") }
+    var showDeleteSuccessDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val items = navController.previousBackStackEntry
@@ -224,12 +241,22 @@ fun ListScreen(
                     .padding(bottom = 80.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo centrado
+                // Logo centrado y menú hamburguesa
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 ) {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.align(Alignment.TopStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Menú",
+                            tint = TextColor
+                        )
+                    }
                     Image(
                         painter = painterResource(id = R.drawable.logo),
                         contentDescription = "Logo",
@@ -388,6 +415,336 @@ fun ListScreen(
                 navController = navController,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
+            // Menú lateral hamburguesa
+            if (showMenu) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xAA000000)) // Fondo semitransparente para efecto modal
+                        .clickable(onClick = { showMenu = false })
+                ) {}
+                Column(
+                    modifier = Modifier
+                        .width(260.dp)
+                        .fillMaxHeight()
+                        .background(BackgroundColor)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "Logo",
+                        modifier = Modifier
+                            .size(60.dp)
+                            .align(Alignment.CenterHorizontally)
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = { showAddProductDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = PanelColor)
+                    ) {
+                        Text("Agregar un producto", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { showEditProductDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = PanelColor)
+                    ) {
+                        Text("Editar la cantidad de un producto", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { showDeleteProductDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = PanelColor)
+                    ) {
+                        Text("Eliminar un producto", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Button(
+                        onClick = { showMenu = false },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    ) {
+                        Text("Cerrar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            // Lightbox para agregar producto
+            if (showAddProductDialog) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xAA000000))
+                        .clickable(onClick = { showAddProductDialog = false })
+                ) {}
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .background(BackgroundColor)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    OutlinedTextField(
+                        value = newProductName,
+                        onValueChange = { newProductName = it },
+                        label = { Text("Nombre del producto", fontWeight = FontWeight.Bold) },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = PanelColor,
+                            unfocusedBorderColor = PanelColor
+                        )
+                    )
+                    OutlinedTextField(
+                        value = newProductQuantity,
+                        onValueChange = { newProductQuantity = it },
+                        label = { Text("Cantidad", fontWeight = FontWeight.Bold) },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = PanelColor,
+                            unfocusedBorderColor = PanelColor
+                        )
+                    )
+                    Button(
+                        onClick = {
+                            if (newProductName.isNotBlank() && newProductQuantity.isNotBlank()) {
+                                selectedItems = selectedItems + (newProductName to (true to newProductQuantity))
+                                productStates = productStates + (newProductName to ProductState())
+                                showAddProductDialog = false
+                                showMenu = false
+                                newProductName = ""
+                                newProductQuantity = ""
+                                showAddSuccessDialog = true
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PanelColor)
+                    ) {
+                        Text("Agregar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = {
+                            showAddProductDialog = false
+                            newProductName = ""
+                            newProductQuantity = ""
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    ) {
+                        Text("Cancelar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            // Lightbox para elegir producto a editar
+            if (showEditProductDialog) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xAA000000))
+                        .clickable(onClick = { showEditProductDialog = false })
+                ) {}
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .background(BackgroundColor)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Elige el producto a editar", fontWeight = FontWeight.Bold, color = TextColor, modifier = Modifier.padding(bottom = 16.dp))
+                    selectedItems.keys.forEach { product ->
+                        Button(
+                            onClick = {
+                                productToEdit = product
+                                newEditQuantity = selectedItems[product]?.second ?: ""
+                                showEditProductDialog = false
+                                showEditQuantityDialog = true
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = CardColor)
+                        ) {
+                            Text(product, color = TextColor, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            showEditProductDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    ) {
+                        Text("Cancelar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            // Lightbox para editar cantidad del producto seleccionado
+            if (showEditQuantityDialog) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xAA000000))
+                        .clickable(onClick = { showEditQuantityDialog = false })
+                ) {}
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .background(BackgroundColor)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    OutlinedTextField(
+                        value = productToEdit,
+                        onValueChange = {},
+                        label = { Text("Producto elegido", fontWeight = FontWeight.Bold) },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        enabled = false,
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = PanelColor,
+                            unfocusedBorderColor = PanelColor
+                        )
+                    )
+                    OutlinedTextField(
+                        value = newEditQuantity,
+                        onValueChange = { newEditQuantity = it },
+                        label = { Text("Cantidad nueva", fontWeight = FontWeight.Bold) },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = PanelColor,
+                            unfocusedBorderColor = PanelColor
+                        )
+                    )
+                    Button(
+                        onClick = {
+                            if (productToEdit.isNotBlank() && newEditQuantity.isNotBlank()) {
+                                selectedItems = selectedItems.toMutableMap().apply {
+                                    put(productToEdit, (true to newEditQuantity))
+                                }
+                                showEditQuantityDialog = false
+                                productToEdit = ""
+                                newEditQuantity = ""
+                                showEditSuccessDialog = true
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PanelColor)
+                    ) {
+                        Text("Editar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = {
+                            showEditQuantityDialog = false
+                            productToEdit = ""
+                            newEditQuantity = ""
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    ) {
+                        Text("Cancelar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            // Lightbox para elegir producto a eliminar
+            if (showDeleteProductDialog) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xAA000000))
+                        .clickable(onClick = { showDeleteProductDialog = false })
+                ) {}
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .background(BackgroundColor)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Elige el producto a eliminar", fontWeight = FontWeight.Bold, color = TextColor, modifier = Modifier.padding(bottom = 16.dp))
+                    selectedItems.keys.forEach { product ->
+                        Button(
+                            onClick = {
+                                productToDelete = product
+                                showDeleteProductDialog = false
+                                showDeleteConfirmDialog = true
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = CardColor)
+                        ) {
+                            Text(product, color = TextColor, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            showDeleteProductDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    ) {
+                        Text("Cancelar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            // Lightbox de confirmación para eliminar producto
+            if (showDeleteConfirmDialog) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xAA000000))
+                        .clickable(onClick = { showDeleteConfirmDialog = false })
+                ) {}
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .background(BackgroundColor)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("¿Estas seguro de eliminar el producto?", fontWeight = FontWeight.Bold, color = TextColor, modifier = Modifier.padding(bottom = 16.dp), textAlign = TextAlign.Center)
+                    OutlinedTextField(
+                        value = productToDelete,
+                        onValueChange = {},
+                        label = { Text("Producto elegido", fontWeight = FontWeight.Bold) },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        enabled = false,
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = PanelColor,
+                            unfocusedBorderColor = PanelColor
+                        )
+                    )
+                    Button(
+                        onClick = {
+                            if (productToDelete.isNotBlank()) {
+                                selectedItems = selectedItems.toMutableMap().apply { remove(productToDelete) }
+                                productStates = productStates.toMutableMap().apply { remove(productToDelete) }
+                                showDeleteConfirmDialog = false
+                                productToDelete = ""
+                                showDeleteSuccessDialog = true
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PanelColor)
+                    ) {
+                        Text("eliminar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = {
+                            showDeleteConfirmDialog = false
+                            productToDelete = ""
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    ) {
+                        Text("Cancelar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
         }
     }
 
@@ -428,6 +785,105 @@ fun ListScreen(
                         )
                     ) {
                         Text("Entendido")
+                    }
+                }
+            }
+        }
+    }
+
+    // Feedback de producto agregado con éxito
+    if (showAddSuccessDialog) {
+        Dialog(onDismissRequest = { showAddSuccessDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = BackgroundColor)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Producto agregado a la lista con éxito",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = TextColor,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { showAddSuccessDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    ) {
+                        Text("Aceptar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
+    // Feedback de producto editado con éxito
+    if (showEditSuccessDialog) {
+        Dialog(onDismissRequest = { showEditSuccessDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = BackgroundColor)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Producto editado con éxito",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = TextColor,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { showEditSuccessDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    ) {
+                        Text("Aceptar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
+    // Feedback de producto eliminado con éxito
+    if (showDeleteSuccessDialog) {
+        Dialog(onDismissRequest = { showDeleteSuccessDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = BackgroundColor)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Producto eliminado con éxito",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = TextColor,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { showDeleteSuccessDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    ) {
+                        Text("Aceptar", color = TextColor, fontWeight = FontWeight.Bold)
                     }
                 }
             }

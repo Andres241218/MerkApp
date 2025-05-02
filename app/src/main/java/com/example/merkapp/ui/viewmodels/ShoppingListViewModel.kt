@@ -53,4 +53,14 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
             loadShoppingLists()
         }
     }
+
+    fun deleteList(list: ShoppingList) {
+        viewModelScope.launch {
+            val lists = shoppingListPreferences.getShoppingLists().toMutableList()
+            lists.removeAll { it.id == list.id }
+            shoppingListPreferences.clearShoppingLists()
+            lists.forEach { shoppingListPreferences.saveShoppingList(it) }
+            loadShoppingLists()
+        }
+    }
 } 
