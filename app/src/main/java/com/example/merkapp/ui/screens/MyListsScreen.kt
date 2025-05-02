@@ -36,6 +36,13 @@ fun MyListsScreen(
 ) {
     val lists by viewModel.shoppingLists.collectAsState()
     var selectedList by remember { mutableStateOf<ShoppingList?>(null) }
+    var showDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showDialog) {
+        if (!showDialog) {
+            selectedList = null
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -89,7 +96,10 @@ fun MyListsScreen(
                                     .fillMaxWidth()
                                     .padding(vertical = 8.dp),
                                 colors = CardDefaults.cardColors(containerColor = CardColor),
-                                onClick = { selectedList = list }
+                                onClick = { 
+                                    selectedList = list
+                                    showDialog = true
+                                }
                             ) {
                                 Column(
                                     modifier = Modifier
@@ -162,10 +172,11 @@ fun MyListsScreen(
         }
     }
 
-    // Dialog para mostrar detalles de la lista seleccionada
-    if (selectedList != null) {
+    if (showDialog && selectedList != null) {
         Dialog(
-            onDismissRequest = { selectedList = null }
+            onDismissRequest = { 
+                showDialog = false
+            }
         ) {
             Card(
                 modifier = Modifier
@@ -232,7 +243,9 @@ fun MyListsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = { selectedList = null },
+                        onClick = { 
+                            showDialog = false
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = ButtonColor,
                             contentColor = TextColor

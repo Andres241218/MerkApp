@@ -53,8 +53,8 @@ fun BottomNavBar(
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = ButtonColor,
                     selectedTextColor = ButtonColor,
-                    unselectedIconColor = TextColor,
-                    unselectedTextColor = TextColor,
+                    unselectedIconColor = Color.Black,
+                    unselectedTextColor = Color.Black,
                     indicatorColor = BackgroundColor
                 )
             )

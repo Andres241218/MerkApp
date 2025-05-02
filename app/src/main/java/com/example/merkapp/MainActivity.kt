@@ -3,47 +3,31 @@ package com.example.merkapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
+import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.merkapp.ui.screens.*
 import com.example.merkapp.ui.theme.MerkAppTheme
-<<<<<<< HEAD
 import com.example.merkapp.ui.viewmodels.UserViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.merkapp.ui.viewmodels.ShoppingListViewModel
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-=======
-import com.example.merkapp.ui.screens.UserViewModel
-import androidx.compose.runtime.remember
-
->>>>>>> f2ff4ecc50fcac691c1628cca3cd394589439778
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.navigation
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MerkAppTheme {
-<<<<<<< HEAD
-                Navigation()
-=======
-                val navController = rememberNavController()
-                val userViewModel = remember { UserViewModel() } // instancia única compartida
-                AppNavigation(navController, userViewModel)
->>>>>>> f2ff4ecc50fcac691c1628cca3cd394589439778
+                AppNavigation()
             }
         }
     }
 }
 
-
 @Composable
-<<<<<<< HEAD
-fun Navigation() {
+fun AppNavigation() {
     val navController = rememberNavController()
     val userViewModel: UserViewModel = viewModel()
     val shoppingListViewModel: ShoppingListViewModel = viewModel()
@@ -51,68 +35,77 @@ fun Navigation() {
 
     NavHost(
         navController = navController,
-        startDestination = "login"
+        startDestination = "splash"
     ) {
-        composable("login") {
-            LoginScreen(navController = navController, userViewModel = userViewModel)
-        }
-        composable("register") {
-            RegisterScreen(navController = navController, userViewModel = userViewModel)
-=======
-fun AppNavigation(navController: NavHostController, userViewModel: UserViewModel) {
-    NavHost(navController = navController, startDestination = "splash") {
         composable("splash") {
-            SplashScreen(navController)
+            SplashScreen(navController = navController)
         }
         composable("login") {
-            LoginScreen(navController, userViewModel)
+            LoginScreen(
+                navController = navController,
+                userViewModel = userViewModel
+            )
         }
         composable("register") {
-            RegisterScreen(navController, userViewModel)
-        }
-        composable("forgotPassword") {
-            ForgotPasswordScreen(navController)
->>>>>>> f2ff4ecc50fcac691c1628cca3cd394589439778
+            RegisterScreen(
+                navController = navController,
+                userViewModel = userViewModel
+            )
         }
         composable("main") {
-            LaunchedEffect(userState.isLoggedIn) {
-                if (!userState.isLoggedIn) {
+            if (!userState.isLoggedIn) {
+                LaunchedEffect(Unit) {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            } else {
+                MainScreen(
+                    navController = navController,
+                    userViewModel = userViewModel
+                )
             }
-            MainScreen(navController = navController, userViewModel = userViewModel)
         }
         composable("list") {
-            LaunchedEffect(userState.isLoggedIn) {
-                if (!userState.isLoggedIn) {
+            if (!userState.isLoggedIn) {
+                LaunchedEffect(Unit) {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            } else {
+                ListScreen(
+                    navController = navController,
+                    shoppingListViewModel = shoppingListViewModel
+                )
             }
-            ListScreen(navController = navController, shoppingListViewModel = shoppingListViewModel)
         }
         composable("mylists") {
-            LaunchedEffect(userState.isLoggedIn) {
-                if (!userState.isLoggedIn) {
+            if (!userState.isLoggedIn) {
+                LaunchedEffect(Unit) {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            } else {
+                MyListsScreen(
+                    navController = navController,
+                    viewModel = shoppingListViewModel
+                )
             }
-            MyListsScreen(navController = navController, viewModel = shoppingListViewModel)
         }
         composable("config") {
-            LaunchedEffect(userState.isLoggedIn) {
-                if (!userState.isLoggedIn) {
+            if (!userState.isLoggedIn) {
+                LaunchedEffect(Unit) {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            } else {
+                ConfigScreen(
+                    navController = navController
+                )
             }
-            ConfigScreen(navController = navController)
         }
     }
 }
