@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,23 +23,30 @@ import com.example.merkapp.R
 import com.example.merkapp.data.ShoppingList
 import com.example.merkapp.ui.components.BottomNavBar
 import com.example.merkapp.ui.viewmodels.ShoppingListViewModel
-
-private val BackgroundColor = Color(0xFFDEB887) // #DEB887
-private val ButtonColor = Color(0xFFCE8540)     // #CE8540
-private val TextColor = Color(0xFF314401)       // #314401
-private val CardColor = Color(0xFFD4A76A)       // #D4A76A
+import com.example.merkapp.ui.viewmodels.ThemeViewModel
+import com.example.merkapp.ui.viewmodels.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyListsScreen(
     navController: NavHostController,
-    viewModel: ShoppingListViewModel
+    viewModel: ShoppingListViewModel,
+    userViewModel: UserViewModel,
+    themeViewModel: ThemeViewModel
 ) {
+    val isDarkMode by themeViewModel.isDarkMode.collectAsState()
+    val BackgroundColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF014CA0) else Color(0xFFDEB887) }
+    val ButtonColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF2F2C78) else Color(0xFFCE8540) }
+    val TextColor = remember(isDarkMode) { if (isDarkMode) Color.White else Color(0xFF314401) }
+    val CardColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF312C9B) else Color(0xFFD4A76A) }
+    val logoRes = remember(isDarkMode) { if (isDarkMode) R.drawable.icw_logo else R.drawable.logo }
+
     val lists by viewModel.shoppingLists.collectAsState()
     var selectedList by remember { mutableStateOf<ShoppingList?>(null) }
     var showDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showDeleteSuccessDialog by remember { mutableStateOf(false) }
+    var showInstructions by remember { mutableStateOf(false) }
 
     LaunchedEffect(showDialog) {
         if (!showDialog) {
@@ -60,13 +68,28 @@ fun MyListsScreen(
                     .padding(bottom = 80.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
+                Box(
                     modifier = Modifier
-                        .size(100.dp)
-                        .padding(bottom = 16.dp)
-                )
+                        .fillMaxWidth()
+                ) {
+                    Image(
+                        painter = painterResource(id = logoRes),
+                        contentDescription = "Logo",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .align(Alignment.Center)
+                    )
+                    IconButton(
+                        onClick = { showInstructions = true },
+                        modifier = Modifier.align(Alignment.TopEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Instrucciones",
+                            tint = TextColor
+                        )
+                    }
+                }
 
                 Text(
                     text = "Mis Listas",
@@ -198,13 +221,18 @@ fun MyListsScreen(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
-
+                    Text(
+                        text = "En esta pantalla puedes ver los productos de la lista seleccionada.\n\nPuedes eliminar la lista si ya no la necesitas.\n\nSi deseas volver a comprar los mismos productos, usa el botón 'Agregar' para llevar esta lista a la pantalla de compras y marcar los productos que consigas.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextColor,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
                     LazyColumn(
                         modifier = Modifier
                             .weight(1f, false)
                             .padding(vertical = 8.dp)
                     ) {
-                        items(selectedList!!.items.toList()) { (product, item) ->
+                        items(selectedList?.items?.toList() ?: emptyList()) { (product, item) ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -223,6 +251,13 @@ fun MyListsScreen(
                                         color = TextColor,
                                         style = MaterialTheme.typography.bodyMedium
                                     )
+                                    if (item.cost.isNotBlank()) {
+                                        Text(
+                                            text = "Costo: $${item.cost}",
+                                            color = TextColor,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
                                 }
 
                                 if (item.isFound) {
@@ -241,6 +276,16 @@ fun MyListsScreen(
                             }
                         }
                     }
+                    val totalCost = selectedList?.items?.filter { it.value.isFound }
+                        ?.mapNotNull { it.value.cost.toDoubleOrNull() }
+                        ?.sum() ?: 0.0
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Total gastado: $" + String.format("%.2f", totalCost),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = TextColor,
+                        textAlign = TextAlign.Center
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -370,6 +415,46 @@ fun MyListsScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
                     ) {
                         Text("Aceptar", color = TextColor, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
+    if (showInstructions) {
+        Dialog(onDismissRequest = { showInstructions = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = BackgroundColor)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Instrucciones",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = TextColor
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "- Puedes ver las listas que has creado.\n\n- Usa el botón 'Eliminar' para borrar una lista que ya no necesites.\n\n- Usa el botón 'Agregar' para volver a comprar los productos de esa lista en la pantalla de compras.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextColor
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { showInstructions = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ButtonColor,
+                            contentColor = TextColor
+                        )
+                    ) {
+                        Text("Entendido")
                     }
                 }
             }

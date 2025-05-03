@@ -23,76 +23,25 @@ import androidx.navigation.NavHostController
 import com.example.merkapp.R
 import com.example.merkapp.ui.components.BottomNavBar
 import com.example.merkapp.ui.viewmodels.UserViewModel
-
-// Definición de colores personalizados
-private val BackgroundColor = Color(0xFFDEB887) // #DEB887
-private val ButtonColor = Color(0xFFCE8540)     // #CE8540
-private val TextColor = Color(0xFF314401)       // #314401
-private val PanelColor = Color(0xFFDAA51E)      // #DAA51E
-private val ProductPanelColor = Color(0xFFD4A76A) // Un tono más oscuro que BackgroundColor
-
-// Función para obtener el ID del recurso del ícono
-private fun getProductIconResource(product: String): Int {
-    return when (product.lowercase()) {
-        // Proteínas
-        "carne" -> R.drawable.ic_carne
-        "pollo" -> R.drawable.ic_pollo
-        "pescado" -> R.drawable.ic_pescado
-        "huevos" -> R.drawable.ic_huevos
-
-        // Víveres
-        "avena" -> R.drawable.ic_avena
-        "azúcar" -> R.drawable.ic_azucar
-        "sal" -> R.drawable.ic_sal
-        "maíz" -> R.drawable.ic_maiz
-        "aceite" -> R.drawable.ic_aceite
-        "te" -> R.drawable.ic_te
-        "cafe" -> R.drawable.ic_cafe
-        "galletas" -> R.drawable.ic_galletas
-        "tostadas" -> R.drawable.ic_tostadas
-
-        // Frutas y verduras
-        "pera" -> R.drawable.ic_pera
-        "piña" -> R.drawable.ic_pina
-        "banano" -> R.drawable.ic_banano
-        "arándanos" -> R.drawable.ic_arandanos
-        "sandia" -> R.drawable.ic_sandia
-        "mango" -> R.drawable.ic_mango
-        "uvas" -> R.drawable.ic_uvas
-        "manzanas" -> R.drawable.ic_manzana
-        "espinacas" -> R.drawable.ic_espinacas
-        "brócoli" -> R.drawable.ic_brocoli
-        "zanahoria" -> R.drawable.ic_zanahoria
-        "lechuga" -> R.drawable.ic_lechuga
-        "tomate" -> R.drawable.ic_tomate
-        "apio" -> R.drawable.ic_apio
-        "pepino" -> R.drawable.ic_pepino
-        "ahuyama" -> R.drawable.ic_ahuyama
-
-        // Aseo
-        "escoba" -> R.drawable.ic_escoba
-        "recogedor" -> R.drawable.ic_recogedor
-        "esponjas" -> R.drawable.ic_esponjas
-        "guantes" -> R.drawable.ic_guantes
-        "limpia vidrios" -> R.drawable.ic_limpiavidrios
-        "trapeador" -> R.drawable.ic_trapeador
-
-        // Lácteos
-        "leche" -> R.drawable.ic_leche
-        "queso" -> R.drawable.ic_queso
-        "yogurt" -> R.drawable.ic_yogurt
-        "mantequilla" -> R.drawable.ic_mantequilla
-        "crema de leche" -> R.drawable.ic_crema_leche
-        "kumis" -> R.drawable.ic_kumis
-
-        // Ícono por defecto
-        else -> R.drawable.ic_producto_default
-    }
-}
+import com.example.merkapp.ui.viewmodels.ThemeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController, userViewModel: UserViewModel) {
+fun MainScreen(
+    navController: NavHostController,
+    userViewModel: UserViewModel,
+    themeViewModel: ThemeViewModel
+) {
+    val isDarkMode by themeViewModel.isDarkMode.collectAsState()
+    val BackgroundColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF014CA0) else Color(0xFFDEB887) }
+    val ButtonColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF2F2C78) else Color(0xFFCE8540) }
+    val TextColor = remember(isDarkMode) { if (isDarkMode) Color.White else Color(0xFF314401) }
+    val PanelColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF312C9B) else Color(0xFFDAA51E) }
+    val CardColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF312C9B) else Color(0xFFD4A76A) }
+    val ProductPanelColor = CardColor
+    val logoRes = remember(isDarkMode) { if (isDarkMode) R.drawable.icw_logo else R.drawable.logo }
+    val infoIcon = remember(isDarkMode) { if (isDarkMode) R.drawable.icw_info else R.drawable.ic_info }
+
     LaunchedEffect(Unit) {
         userViewModel.refreshUser()
     }
@@ -235,7 +184,7 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.logo),
+                            painter = painterResource(id = logoRes),
                             contentDescription = "MerkApp Logo",
                             modifier = Modifier
                                 .size(120.dp) // Aumentado el tamaño del logo
@@ -265,7 +214,7 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel) {
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Info,
+                                painter = painterResource(id = infoIcon),
                                 contentDescription = "Instrucciones",
                                 tint = Color.Black,
                                 modifier = Modifier
@@ -353,7 +302,7 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel) {
                                                     )
                                                     
                                                     Image(
-                                                        painter = painterResource(id = getProductIconResource(product)),
+                                                        painter = painterResource(id = getProductIconResource(product, themeViewModel)),
                                                         contentDescription = null,
                                                         modifier = Modifier
                                                             .size(24.dp)
@@ -448,5 +397,73 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel) {
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
+    }
+}
+
+private fun getProductIconResource(product: String, themeViewModel: ThemeViewModel): Int {
+    val prefix = themeViewModel.getIconPrefix()
+    return when (product.lowercase()) {
+        // Proteínas
+        "carne" -> getResourceId("${prefix}carne")
+        "pollo" -> getResourceId("${prefix}pollo")
+        "pescado" -> getResourceId("${prefix}pescado")
+        "huevos" -> getResourceId("${prefix}huevos")
+
+        // Víveres
+        "avena" -> getResourceId("${prefix}avena")
+        "azúcar" -> getResourceId("${prefix}azucar")
+        "sal" -> getResourceId("${prefix}sal")
+        "maíz" -> getResourceId("${prefix}maiz")
+        "aceite" -> getResourceId("${prefix}aceite")
+        "te" -> getResourceId("${prefix}te")
+        "cafe" -> getResourceId("${prefix}cafe")
+        "galletas" -> getResourceId("${prefix}galletas")
+        "tostadas" -> getResourceId("${prefix}tostadas")
+
+        // Frutas y verduras
+        "pera" -> getResourceId("${prefix}pera")
+        "piña" -> getResourceId("${prefix}pina")
+        "banano" -> getResourceId("${prefix}banano")
+        "arándanos" -> getResourceId("${prefix}arandanos")
+        "sandia" -> getResourceId("${prefix}sandia")
+        "mango" -> getResourceId("${prefix}mango")
+        "uvas" -> getResourceId("${prefix}uvas")
+        "manzanas" -> getResourceId("${prefix}manzana")
+        "espinacas" -> getResourceId("${prefix}espinacas")
+        "brócoli" -> getResourceId("${prefix}brocoli")
+        "zanahoria" -> getResourceId("${prefix}zanahoria")
+        "lechuga" -> getResourceId("${prefix}lechuga")
+        "tomate" -> getResourceId("${prefix}tomate")
+        "apio" -> getResourceId("${prefix}apio")
+        "pepino" -> getResourceId("${prefix}pepino")
+        "ahuyama" -> getResourceId("${prefix}ahuyama")
+
+        // Aseo
+        "escoba" -> getResourceId("${prefix}escoba")
+        "recogedor" -> getResourceId("${prefix}recogedor")
+        "esponjas" -> getResourceId("${prefix}esponjas")
+        "guantes" -> getResourceId("${prefix}guantes")
+        "limpia vidrios" -> getResourceId("${prefix}limpiavidrios")
+        "trapeador" -> getResourceId("${prefix}trapeador")
+
+        // Lácteos
+        "leche" -> getResourceId("${prefix}leche")
+        "queso" -> getResourceId("${prefix}queso")
+        "yogurt" -> getResourceId("${prefix}yogurt")
+        "mantequilla" -> getResourceId("${prefix}mantequilla")
+        "crema de leche" -> getResourceId("${prefix}crema_leche")
+        "kumis" -> getResourceId("${prefix}kumis")
+
+        // Ícono por defecto
+        else -> getResourceId("${prefix}producto_default")
+    }
+}
+
+private fun getResourceId(name: String): Int {
+    return try {
+        val field = R.drawable::class.java.getDeclaredField(name)
+        field.getInt(null)
+    } catch (e: Exception) {
+        R.drawable.ic_producto_default
     }
 }

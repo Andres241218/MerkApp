@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.merkapp.data.ShoppingList
 import com.example.merkapp.data.ShoppingItem
 import com.example.merkapp.data.ShoppingListPreferences
-import com.example.merkapp.ui.screens.ProductState
+import com.example.merkapp.model.ProductState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -42,6 +42,27 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
                 completed = true
             )
 
+            shoppingListPreferences.saveShoppingList(newList)
+            loadShoppingLists()
+        }
+    }
+
+    fun saveNewListWithCost(items: Map<String, Pair<Boolean, String>>, productStates: Map<String, ProductState>, productCosts: Map<String, String>) {
+        viewModelScope.launch {
+            val shoppingItems = items.mapValues { (key, pair) ->
+                val state = productStates[key] ?: ProductState()
+                val cost = productCosts[key] ?: ""
+                ShoppingItem(
+                    quantity = pair.second,
+                    isFound = state.isFound,
+                    isNotFound = state.isNotFound,
+                    cost = cost
+                )
+            }
+            val newList = ShoppingList(
+                items = shoppingItems,
+                completed = true
+            )
             shoppingListPreferences.saveShoppingList(newList)
             loadShoppingLists()
         }

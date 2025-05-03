@@ -10,14 +10,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 private val BackgroundColor = Color(0xFFDEB887) // #DEB887
 private val ButtonColor = Color(0xFFCE8540)     // #CE8540
 private val TextColor = Color(0xFF314401)       // #314401
+private val PanelColor = Color(0xFFF0E68C)       // #F0E68C
 
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     object Home : BottomNavItem("main", Icons.Default.Home, "Inicio")
-    object Lists : BottomNavItem("mylists", Icons.Default.List, "Mis Listas")
+    object Lists : BottomNavItem("my_lists", Icons.Default.List, "Mis Listas")
     object Config : BottomNavItem("config", Icons.Default.Settings, "Configuración")
 }
 
@@ -31,31 +33,38 @@ fun BottomNavBar(
         BottomNavItem.Lists,
         BottomNavItem.Config
     )
-
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
     NavigationBar(
-        modifier = modifier,
-        containerColor = BackgroundColor
+        containerColor = BackgroundColor,
+        modifier = modifier
     ) {
-        var selectedItem by remember { mutableStateOf(0) }
-        
-        items.forEachIndexed { index, item ->
+        items.forEach { item ->
+            val selected = currentRoute == item.route
             NavigationBarItem(
-                icon = { Icon(item.icon, contentDescription = item.label) },
-                label = { Text(item.label) },
-                selected = selectedItem == index,
+                selected = selected,
                 onClick = {
-                    selectedItem = index
-                    navController.navigate(item.route) {
-                        popUpTo(navController.graph.startDestinationId)
+                    if (!selected) navController.navigate(item.route) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 },
+                icon = {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = item.label,
+                        tint = if (selected) Color.Black else TextColor
+                    )
+                },
+                label = {
+                    Text(
+                        text = item.label,
+                        color = if (selected) Color.Black else TextColor
+                    )
+                },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = ButtonColor,
-                    selectedTextColor = ButtonColor,
-                    unselectedIconColor = Color.Black,
-                    unselectedTextColor = Color.Black,
-                    indicatorColor = BackgroundColor
+                    indicatorColor = if (selected) PanelColor else BackgroundColor
                 )
             )
         }

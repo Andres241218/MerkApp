@@ -20,6 +20,7 @@ import com.example.merkapp.ui.viewmodels.UserViewModel
 private val BackgroundColor = Color(0xFFDEB887) // #DEB887
 private val ButtonColor = Color(0xFFCE8540)     // #CE8540
 private val TextColor = Color(0xFF314401)       // #314401
+private val CardColor = Color(0xFFD4A76A)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +78,8 @@ fun RegisterScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = CardColor,
+                    unfocusedContainerColor = CardColor,
                     focusedBorderColor = ButtonColor,
                     unfocusedBorderColor = TextColor,
                     focusedLabelColor = ButtonColor,
@@ -93,6 +96,8 @@ fun RegisterScreen(
                 label = { Text("Nombre") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = CardColor,
+                    unfocusedContainerColor = CardColor,
                     focusedBorderColor = ButtonColor,
                     unfocusedBorderColor = TextColor,
                     focusedLabelColor = ButtonColor,
@@ -111,6 +116,8 @@ fun RegisterScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = CardColor,
+                    unfocusedContainerColor = CardColor,
                     focusedBorderColor = ButtonColor,
                     unfocusedBorderColor = TextColor,
                     focusedLabelColor = ButtonColor,
@@ -129,6 +136,8 @@ fun RegisterScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = CardColor,
+                    unfocusedContainerColor = CardColor,
                     focusedBorderColor = ButtonColor,
                     unfocusedBorderColor = TextColor,
                     focusedLabelColor = ButtonColor,

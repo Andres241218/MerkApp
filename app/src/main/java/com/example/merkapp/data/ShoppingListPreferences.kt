@@ -17,7 +17,8 @@ data class ShoppingList(
 data class ShoppingItem(
     val quantity: String,
     val isFound: Boolean = false,
-    val isNotFound: Boolean = false
+    val isNotFound: Boolean = false,
+    val cost: String = ""
 )
 
 class ShoppingListPreferences(context: Context) {

@@ -21,6 +21,7 @@ private val BackgroundColor = Color(0xFFDEB887) // #DEB887
 private val ButtonColor = Color(0xFFCE8540)     // #CE8540
 private val TextColor = Color(0xFF314401)       // #314401
 private val PanelColor = Color(0xFFDAA51E)      // #DAA51E
+private val CardColor = Color(0xFFD4A76A)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,8 +75,8 @@ fun LoginScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = PanelColor,
-                    unfocusedContainerColor = PanelColor,
+                    focusedContainerColor = CardColor,
+                    unfocusedContainerColor = CardColor,
                     focusedBorderColor = ButtonColor,
                     unfocusedBorderColor = TextColor,
                     focusedLabelColor = ButtonColor,
@@ -96,8 +97,8 @@ fun LoginScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = PanelColor,
-                    unfocusedContainerColor = PanelColor,
+                    focusedContainerColor = CardColor,
+                    unfocusedContainerColor = CardColor,
                     focusedBorderColor = ButtonColor,
                     unfocusedBorderColor = TextColor,
                     focusedLabelColor = ButtonColor,

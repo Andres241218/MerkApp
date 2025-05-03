@@ -29,24 +29,25 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.merkapp.ui.viewmodels.ShoppingListViewModel
 import androidx.compose.foundation.clickable
-
-private val BackgroundColor = Color(0xFFDEB887) // #DEB887
-private val ButtonColor = Color(0xFFCE8540)     // #CE8540
-private val TextColor = Color(0xFF314401)       // #314401
-private val CardColor = Color(0xFFD4A76A)       // #D4A76A
-private val PanelColor = Color(0xFFDAA51E)      // #DAA51E
-
-data class ProductState(
-    val isFound: Boolean = false,
-    val isNotFound: Boolean = false
-)
+import com.example.merkapp.ui.viewmodels.ThemeViewModel
+import com.example.merkapp.model.ProductState
+import androidx.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(
     navController: NavHostController,
-    shoppingListViewModel: ShoppingListViewModel
+    shoppingListViewModel: ShoppingListViewModel,
+    themeViewModel: ThemeViewModel
 ) {
+    val isDarkMode by themeViewModel.isDarkMode.collectAsState()
+    val BackgroundColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF014CA0) else Color(0xFFDEB887) }
+    val ButtonColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF2F2C78) else Color(0xFFCE8540) }
+    val TextColor = remember(isDarkMode) { if (isDarkMode) Color.White else Color(0xFF314401) }
+    val CardColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF312C9B) else Color(0xFFD4A76A) }
+    val PanelColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF312C9B) else Color(0xFFDAA51E) }
+    val logoRes = remember(isDarkMode) { if (isDarkMode) R.drawable.icw_logo else R.drawable.logo }
+
     var selectedItems by remember { mutableStateOf<Map<String, Pair<Boolean, String>>>(emptyMap()) }
     var productStates by remember { mutableStateOf<Map<String, ProductState>>(emptyMap()) }
     var showInstructions by remember { mutableStateOf(false) }
@@ -66,6 +67,26 @@ fun ListScreen(
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var productToDelete by remember { mutableStateOf("") }
     var showDeleteSuccessDialog by remember { mutableStateOf(false) }
+    var productCosts by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+
+    // Optimizaciones con derivedStateOf
+    val notFoundProducts by remember(productStates) {
+        derivedStateOf { productStates.filter { it.value.isNotFound }.keys.toList() }
+    }
+    val totalCost by remember(selectedItems, productStates, productCosts) {
+        derivedStateOf {
+            selectedItems.keys.filter { productStates[it]?.isFound == true }
+                .mapNotNull { productCosts[it]?.toDoubleOrNull() }
+                .sum()
+        }
+    }
+
+    // --- Define la función aquí, antes de cualquier uso ---
+    fun removeProduct(product: String) {
+        selectedItems = selectedItems.toMutableMap().apply { remove(product) }
+        productStates = productStates.toMutableMap().apply { remove(product) }
+        productCosts = productCosts.toMutableMap().apply { remove(product) }
+    }
 
     LaunchedEffect(Unit) {
         val items = navController.previousBackStackEntry
@@ -80,10 +101,6 @@ fun ListScreen(
 
     // Diálogo de productos faltantes
     if (showMissingProducts) {
-        val missingProducts = selectedItems.filter { (product, _) ->
-            productStates[product]?.isNotFound == true
-        }
-
         Dialog(onDismissRequest = { showMissingProducts = false }) {
             Card(
                 modifier = Modifier
@@ -159,8 +176,6 @@ fun ListScreen(
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val notFoundProducts = productStates.filter { it.value.isNotFound }.keys.toList()
-                    
                     if (notFoundProducts.isEmpty()) {
                         Icon(
                             imageVector = Icons.Default.Check,
@@ -204,12 +219,20 @@ fun ListScreen(
                         }
                     }
                     
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Total gastado: $" + String.format("%.2f", totalCost),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = TextColor,
+                        textAlign = TextAlign.Center
+                    )
+                    
                     Spacer(modifier = Modifier.height(24.dp))
                     
                     Button(
                         onClick = {
                             // Guardar la lista completada
-                            shoppingListViewModel.saveNewList(selectedItems, productStates)
+                            shoppingListViewModel.saveNewListWithCost(selectedItems, productStates, productCosts)
                             navController.navigate("main") {
                                 popUpTo("main") { inclusive = true }
                             }
@@ -258,7 +281,7 @@ fun ListScreen(
                         )
                     }
                     Image(
-                        painter = painterResource(id = R.drawable.logo),
+                        painter = painterResource(id = logoRes),
                         contentDescription = "Logo",
                         modifier = Modifier
                             .size(100.dp)
@@ -299,9 +322,10 @@ fun ListScreen(
                     LazyColumn(
                         modifier = Modifier.weight(1f)
                     ) {
-                        items(selectedItems.toList()) { (product, pair) ->
+                        items(selectedItems.toList(), key = { it.first }) { (product, pair) ->
                             val quantity = pair.second
                             val productState = productStates[product] ?: ProductState()
+                            val cost = productCosts[product] ?: ""
                             
                             Card(
                                 modifier = Modifier
@@ -330,7 +354,23 @@ fun ListScreen(
                                             color = TextColor
                                         )
                                     }
-                                    
+                                    OutlinedTextField(
+                                        value = cost,
+                                        onValueChange = { newCost ->
+                                            productCosts = productCosts.toMutableMap().apply { put(product, newCost) }
+                                        },
+                                        label = { Text("Costo", color = TextColor, fontWeight = FontWeight.SemiBold) },
+                                        modifier = Modifier.width(90.dp),
+                                        singleLine = true,
+                                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                                            focusedTextColor = TextColor,
+                                            unfocusedTextColor = TextColor,
+                                            focusedBorderColor = ButtonColor,
+                                            unfocusedBorderColor = TextColor,
+                                            focusedLabelColor = ButtonColor,
+                                            unfocusedLabelColor = TextColor
+                                        )
+                                    )
                                     Row {
                                         val checkButtonColor by animateColorAsState(
                                             targetValue = if (productState.isFound) Color(0xFF90EE90) else Color.Transparent,
@@ -432,7 +472,7 @@ fun ListScreen(
                     horizontalAlignment = Alignment.Start
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.logo),
+                        painter = painterResource(id = logoRes),
                         contentDescription = "Logo",
                         modifier = Modifier
                             .size(60.dp)
@@ -721,8 +761,7 @@ fun ListScreen(
                     Button(
                         onClick = {
                             if (productToDelete.isNotBlank()) {
-                                selectedItems = selectedItems.toMutableMap().apply { remove(productToDelete) }
-                                productStates = productStates.toMutableMap().apply { remove(productToDelete) }
+                                removeProduct(productToDelete)
                                 showDeleteConfirmDialog = false
                                 productToDelete = ""
                                 showDeleteSuccessDialog = true
@@ -772,7 +811,8 @@ fun ListScreen(
                     Text(
                         text = "1. Marca los productos que hayas encontrado con el ícono de check (✓)\n\n" +
                                "2. Marca los productos que no hayas encontrado con el ícono de X\n\n" +
-                               "3. Cuando termines, presiona el botón 'Completado'",
+                               "3. Cuando termines, presiona el botón 'Completado'\n\n" +
+                               "4. Usa el menú hamburguesa (≡) para: \n   - Agregar productos nuevos a la lista\n   - Editar la cantidad de un producto existente\n   - Eliminar productos de la lista",
                         style = MaterialTheme.typography.bodyLarge,
                         color = TextColor
                     )
@@ -889,4 +929,78 @@ fun ListScreen(
             }
         }
     }
+}
+
+private fun getProductIconResource(product: String, themeViewModel: ThemeViewModel): Int {
+    val prefix = themeViewModel.getIconPrefix()
+    return when (product.lowercase()) {
+        // Proteínas
+        "carne" -> getResourceId("${prefix}carne")
+        "pollo" -> getResourceId("${prefix}pollo")
+        "pescado" -> getResourceId("${prefix}pescado")
+        "huevos" -> getResourceId("${prefix}huevos")
+
+        // Víveres
+        "avena" -> getResourceId("${prefix}avena")
+        "azúcar" -> getResourceId("${prefix}azucar")
+        "sal" -> getResourceId("${prefix}sal")
+        "maíz" -> getResourceId("${prefix}maiz")
+        "aceite" -> getResourceId("${prefix}aceite")
+        "te" -> getResourceId("${prefix}te")
+        "cafe" -> getResourceId("${prefix}cafe")
+        "galletas" -> getResourceId("${prefix}galletas")
+        "tostadas" -> getResourceId("${prefix}tostadas")
+
+        // Frutas y verduras
+        "pera" -> getResourceId("${prefix}pera")
+        "piña" -> getResourceId("${prefix}pina")
+        "banano" -> getResourceId("${prefix}banano")
+        "arándanos" -> getResourceId("${prefix}arandanos")
+        "sandia" -> getResourceId("${prefix}sandia")
+        "mango" -> getResourceId("${prefix}mango")
+        "uvas" -> getResourceId("${prefix}uvas")
+        "manzanas" -> getResourceId("${prefix}manzana")
+        "espinacas" -> getResourceId("${prefix}espinacas")
+        "brócoli" -> getResourceId("${prefix}brocoli")
+        "zanahoria" -> getResourceId("${prefix}zanahoria")
+        "lechuga" -> getResourceId("${prefix}lechuga")
+        "tomate" -> getResourceId("${prefix}tomate")
+        "apio" -> getResourceId("${prefix}apio")
+        "pepino" -> getResourceId("${prefix}pepino")
+        "ahuyama" -> getResourceId("${prefix}ahuyama")
+
+        // Aseo
+        "escoba" -> getResourceId("${prefix}escoba")
+        "recogedor" -> getResourceId("${prefix}recogedor")
+        "esponjas" -> getResourceId("${prefix}esponjas")
+        "guantes" -> getResourceId("${prefix}guantes")
+        "limpia vidrios" -> getResourceId("${prefix}limpiavidrios")
+        "trapeador" -> getResourceId("${prefix}trapeador")
+
+        // Lácteos
+        "leche" -> getResourceId("${prefix}leche")
+        "queso" -> getResourceId("${prefix}queso")
+        "yogurt" -> getResourceId("${prefix}yogurt")
+        "mantequilla" -> getResourceId("${prefix}mantequilla")
+        "crema de leche" -> getResourceId("${prefix}crema_leche")
+        "kumis" -> getResourceId("${prefix}kumis")
+
+        // Ícono por defecto
+        else -> getResourceId("${prefix}producto_default")
+    }
+}
+
+private fun getResourceId(name: String): Int {
+    return try {
+        val field = R.drawable::class.java.getDeclaredField(name)
+        field.getInt(null)
+    } catch (e: Exception) {
+        R.drawable.ic_producto_default
+    }
+}
+
+@Preview
+@Composable
+fun ListScreenPreview() {
+    ListScreen(NavHostController(null), ShoppingListViewModel(), ThemeViewModel())
 }

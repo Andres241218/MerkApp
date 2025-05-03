@@ -21,20 +21,29 @@ import androidx.navigation.NavHostController
 import com.example.merkapp.R
 import com.example.merkapp.ui.components.BottomNavBar
 import com.example.merkapp.ui.viewmodels.ConfigViewModel
+import com.example.merkapp.ui.viewmodels.ThemeViewModel
+import com.example.merkapp.ui.viewmodels.UserViewModel
 
 // Definición de colores personalizados
 private val BackgroundColor = Color(0xFFDEB887) // #DEB887
 private val ButtonColor = Color(0xFFCE8540)     // #CE8540
 private val TextColor = Color(0xFF314401)       // #314401
+private val CardColor = Color(0xFFD4A76A)
+private val DarkBackgroundColor = Color(0xFF014CA0)
+private val DarkButtonColor = Color(0xFF2F2C78)
+private val DarkPanelColor = Color(0xFF312C9B)
+private val DarkTextColor = Color.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfigScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    userViewModel: UserViewModel,
+    themeViewModel: ThemeViewModel
 ) {
     val context = LocalContext.current
     val viewModel: ConfigViewModel = viewModel(factory = ConfigViewModel.Factory(context))
-    
+    val isDarkMode by themeViewModel.isDarkMode.collectAsState()
     var initialEmail by remember { mutableStateOf(viewModel.getUserEmail() ?: "") }
     var name by remember { mutableStateOf(viewModel.getUserName() ?: "") }
     var email by remember { mutableStateOf(initialEmail) }
@@ -47,10 +56,17 @@ fun ConfigScreen(
     var errorMessage by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
     val emailChanged = email != initialEmail
-    
+
+    val backgroundColor = if (isDarkMode) DarkBackgroundColor else BackgroundColor
+    val buttonColor = if (isDarkMode) DarkButtonColor else ButtonColor
+    val textColorValue = if (isDarkMode) DarkTextColor else TextColor
+    val panelColor = if (isDarkMode) DarkPanelColor else CardColor
+    val logoRes = if (isDarkMode) R.drawable.icw_logo else R.drawable.logo
+    val infoIcon = if (isDarkMode) R.drawable.icw_info else R.drawable.ic_info
+
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = BackgroundColor
+        color = backgroundColor
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
@@ -63,7 +79,7 @@ fun ConfigScreen(
             ) {
                 // Logo y título
                 Image(
-                    painter = painterResource(id = R.drawable.logo),
+                    painter = painterResource(id = logoRes),
                     contentDescription = "Logo",
                     modifier = Modifier
                         .size(120.dp)
@@ -79,25 +95,46 @@ fun ConfigScreen(
                         style = MaterialTheme.typography.headlineLarge.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = TextColor
+                        color = textColorValue
                     )
-                    IconButton(
-                        onClick = { showInfoDialog = true }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "Información",
-                            tint = TextColor
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { themeViewModel.toggleDarkMode() }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = if (isDarkMode) R.drawable.icw_white else R.drawable.ic_dark),
+                                contentDescription = if (isDarkMode) "Light Mode" else "Dark Mode",
+                                tint = textColorValue
+                            )
+                        }
+                        IconButton(
+                            onClick = { showInfoDialog = true }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = infoIcon),
+                                contentDescription = "Información",
+                                tint = textColorValue
+                            )
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(32.dp)) // Espacio más grande entre título y campos
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = { themeViewModel.toggleDarkMode() },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
+                ) {
+                    Text(
+                        if (isDarkMode) "Cambiar a Light Mode" else "Cambiar a Dark Mode",
+                        color = textColorValue
+                    )
+                }
             }
             // Contenido scrollable con padding inferior para el BottomNavBar
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 80.dp, top = 200.dp) // top más grande para dejar espacio
+                    .padding(start = 16.dp, end = 16.dp, bottom = 80.dp, top = 200.dp)
                     .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -105,54 +142,79 @@ fun ConfigScreen(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Nombre") },
+                    label = { Text("Nombre", color = textColorValue) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = ButtonColor,
-                        unfocusedBorderColor = ButtonColor
+                        containerColor = panelColor,
+                        focusedBorderColor = buttonColor,
+                        unfocusedBorderColor = buttonColor,
+                        focusedLabelColor = textColorValue,
+                        unfocusedLabelColor = textColorValue,
+                        focusedTextColor = textColorValue,
+                        unfocusedTextColor = textColorValue
                     )
                 )
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Correo electrónico") },
+                    label = { Text("Correo electrónico", color = textColorValue) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = ButtonColor,
-                        unfocusedBorderColor = ButtonColor
+                        containerColor = panelColor,
+                        focusedBorderColor = buttonColor,
+                        unfocusedBorderColor = buttonColor,
+                        focusedLabelColor = textColorValue,
+                        unfocusedLabelColor = textColorValue,
+                        focusedTextColor = textColorValue,
+                        unfocusedTextColor = textColorValue
                     )
                 )
                 if (emailChanged) {
                     OutlinedTextField(
                         value = currentPassword,
                         onValueChange = { currentPassword = it },
-                        label = { Text("Contraseña actual") },
+                        label = { Text("Contraseña actual", color = textColorValue) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = ButtonColor,
-                            unfocusedBorderColor = ButtonColor
+                            containerColor = panelColor,
+                            focusedBorderColor = buttonColor,
+                            unfocusedBorderColor = buttonColor,
+                            focusedLabelColor = textColorValue,
+                            unfocusedLabelColor = textColorValue,
+                            focusedTextColor = textColorValue,
+                            unfocusedTextColor = textColorValue
                         ),
                         visualTransformation = PasswordVisualTransformation()
                     )
                     OutlinedTextField(
                         value = newPassword,
                         onValueChange = { newPassword = it },
-                        label = { Text("Nueva contraseña") },
+                        label = { Text("Nueva contraseña", color = textColorValue) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = ButtonColor,
-                            unfocusedBorderColor = ButtonColor
+                            containerColor = panelColor,
+                            focusedBorderColor = buttonColor,
+                            unfocusedBorderColor = buttonColor,
+                            focusedLabelColor = textColorValue,
+                            unfocusedLabelColor = textColorValue,
+                            focusedTextColor = textColorValue,
+                            unfocusedTextColor = textColorValue
                         ),
                         visualTransformation = PasswordVisualTransformation()
                     )
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
-                        label = { Text("Confirmar nueva contraseña") },
+                        label = { Text("Confirmar nueva contraseña", color = textColorValue) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = ButtonColor,
-                            unfocusedBorderColor = ButtonColor
+                            containerColor = panelColor,
+                            focusedBorderColor = buttonColor,
+                            unfocusedBorderColor = buttonColor,
+                            focusedLabelColor = textColorValue,
+                            unfocusedLabelColor = textColorValue,
+                            focusedTextColor = textColorValue,
+                            unfocusedTextColor = textColorValue
                         ),
                         visualTransformation = PasswordVisualTransformation()
                     )
@@ -194,10 +256,10 @@ fun ConfigScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ButtonColor
+                        containerColor = buttonColor
                     )
                 ) {
-                    Text("Aceptar cambios")
+                    Text("Aceptar cambios", color = textColorValue)
                 }
             }
             BottomNavBar(
@@ -208,46 +270,48 @@ fun ConfigScreen(
     }
     if (showInfoDialog) {
         AlertDialog(
-            containerColor = BackgroundColor,
+            containerColor = backgroundColor,
             onDismissRequest = { showInfoDialog = false },
-            title = { Text("Información", color = TextColor) },
-            text = { Text("En esta pantalla puedes actualizar tu información personal y cambiar tu contraseña. Asegúrate de que la nueva contraseña sea segura y fácil de recordar.", color = TextColor) },
+            title = { Text("Información", color = textColorValue) },
+            text = { Text("En esta pantalla puedes actualizar tu información personal y cambiar tu contraseña. Asegúrate de que la nueva contraseña sea segura y fácil de recordar.", color = textColorValue) },
             confirmButton = {
                 Button(
                     onClick = { showInfoDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
                 ) {
-                    Text("Entendido", color = TextColor)
+                    Text("Entendido", color = textColorValue)
                 }
             }
         )
     }
     if (showSuccessDialog) {
         AlertDialog(
-            containerColor = BackgroundColor,
+            containerColor = backgroundColor,
             onDismissRequest = { showSuccessDialog = false },
-            title = { Text("Éxito", color = TextColor) },
-            text = { Text("Tus datos han sido actualizados correctamente.", color = TextColor) },
+            title = { Text("Éxito", color = textColorValue) },
+            text = { Text("Tus datos han sido actualizados correctamente.", color = textColorValue) },
             confirmButton = {
                 Button(
                     onClick = { showSuccessDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = ButtonColor)
+                    colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
                 ) {
-                    Text("Aceptar", color = TextColor)
+                    Text("Aceptar", color = textColorValue)
                 }
             }
         )
     }
     if (showErrorDialog) {
         AlertDialog(
+            containerColor = backgroundColor,
             onDismissRequest = { showErrorDialog = false },
-            title = { Text("Error") },
-            text = { Text(errorMessage) },
+            title = { Text("Error", color = textColorValue) },
+            text = { Text(errorMessage, color = textColorValue) },
             confirmButton = {
-                TextButton(
-                    onClick = { showErrorDialog = false }
+                Button(
+                    onClick = { showErrorDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
                 ) {
-                    Text("Aceptar")
+                    Text("Aceptar", color = textColorValue)
                 }
             }
         )
