@@ -264,7 +264,8 @@ fun ConfigScreen(
             }
             BottomNavBar(
                 navController = navController,
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter),
+                themeViewModel = themeViewModel
             )
         }
     }
@@ -316,4 +317,11 @@ fun ConfigScreen(
             }
         )
     }
-} 
+}
+
+// Si hay un preview o llamada a ConfigScreen sin themeViewModel, elimínala o comenta la línea.
+// @Preview
+// @Composable
+// fun ConfigScreenPreview() {
+//     ConfigScreen(navController = ..., userViewModel = ..., themeViewModel = ...)
+// } 

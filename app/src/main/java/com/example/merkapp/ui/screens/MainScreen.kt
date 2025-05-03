@@ -40,7 +40,7 @@ fun MainScreen(
     val CardColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF312C9B) else Color(0xFFD4A76A) }
     val ProductPanelColor = CardColor
     val logoRes = remember(isDarkMode) { if (isDarkMode) R.drawable.icw_logo else R.drawable.logo }
-    val infoIcon = remember(isDarkMode) { if (isDarkMode) R.drawable.icw_info else R.drawable.ic_info }
+    val infoIcon = if (isDarkMode) R.drawable.icw_info else R.drawable.ic_info
 
     LaunchedEffect(Unit) {
         userViewModel.refreshUser()
@@ -394,7 +394,8 @@ fun MainScreen(
             // El menú de navegación siempre estará en la parte inferior
             BottomNavBar(
                 navController = navController,
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter),
+                themeViewModel = themeViewModel
             )
         }
     }

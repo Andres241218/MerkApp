@@ -47,6 +47,7 @@ fun ListScreen(
     val CardColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF312C9B) else Color(0xFFD4A76A) }
     val PanelColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF312C9B) else Color(0xFFDAA51E) }
     val logoRes = remember(isDarkMode) { if (isDarkMode) R.drawable.icw_logo else R.drawable.logo }
+    val infoIcon = if (isDarkMode) R.drawable.icw_info else R.drawable.ic_info
 
     var selectedItems by remember { mutableStateOf<Map<String, Pair<Boolean, String>>>(emptyMap()) }
     var productStates by remember { mutableStateOf<Map<String, ProductState>>(emptyMap()) }
@@ -122,7 +123,7 @@ fun ListScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     LazyColumn {
-                        items(missingProducts.toList()) { (product, pair) ->
+                        items(notFoundProducts) { product ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -136,8 +137,9 @@ fun ListScreen(
                                     color = TextColor,
                                     modifier = Modifier.weight(1f)
                                 )
+                                val quantity = selectedItems[product]?.second ?: ""
                                 Text(
-                                    text = "Cantidad: ${pair.second}",
+                                    text = "Cantidad: $quantity",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = TextColor
                                 )
@@ -453,7 +455,8 @@ fun ListScreen(
 
             BottomNavBar(
                 navController = navController,
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter),
+                themeViewModel = themeViewModel
             )
             // Menú lateral hamburguesa
             if (showMenu) {
@@ -999,8 +1002,8 @@ private fun getResourceId(name: String): Int {
     }
 }
 
-@Preview
-@Composable
-fun ListScreenPreview() {
-    ListScreen(NavHostController(null), ShoppingListViewModel(), ThemeViewModel())
-}
+// @Preview
+// @Composable
+// fun ListScreenPreview() {
+//     ListScreen(NavHostController(null), ShoppingListViewModel(), ThemeViewModel())
+// }

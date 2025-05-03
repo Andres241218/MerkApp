@@ -11,6 +11,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import com.example.merkapp.ui.viewmodels.ThemeViewModel
 
 private val BackgroundColor = Color(0xFFDEB887) // #DEB887
 private val ButtonColor = Color(0xFFCE8540)     // #CE8540
@@ -26,8 +29,14 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 @Composable
 fun BottomNavBar(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    themeViewModel: ThemeViewModel
 ) {
+    val isDarkMode by themeViewModel.isDarkMode.collectAsState()
+    val PanelColor = if (isDarkMode) Color(0xFF312C9B) else Color(0xFFF0E68C)
+    val BackgroundColor = if (isDarkMode) PanelColor else Color(0xFFDEB887)
+    val TextColor = if (isDarkMode) Color.White else Color(0xFF314401)
+
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Lists,

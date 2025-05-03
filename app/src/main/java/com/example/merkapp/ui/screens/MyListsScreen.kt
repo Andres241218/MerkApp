@@ -40,6 +40,7 @@ fun MyListsScreen(
     val TextColor = remember(isDarkMode) { if (isDarkMode) Color.White else Color(0xFF314401) }
     val CardColor = remember(isDarkMode) { if (isDarkMode) Color(0xFF312C9B) else Color(0xFFD4A76A) }
     val logoRes = remember(isDarkMode) { if (isDarkMode) R.drawable.icw_logo else R.drawable.logo }
+    val infoIcon = if (isDarkMode) R.drawable.icw_info else R.drawable.ic_info
 
     val lists by viewModel.shoppingLists.collectAsState()
     var selectedList by remember { mutableStateOf<ShoppingList?>(null) }
@@ -84,7 +85,7 @@ fun MyListsScreen(
                         modifier = Modifier.align(Alignment.TopEnd)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Info,
+                            painter = painterResource(id = infoIcon),
                             contentDescription = "Instrucciones",
                             tint = TextColor
                         )
@@ -192,7 +193,8 @@ fun MyListsScreen(
 
             BottomNavBar(
                 navController = navController,
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter),
+                themeViewModel = themeViewModel
             )
         }
     }
@@ -222,7 +224,7 @@ fun MyListsScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
-                        text = "En esta pantalla puedes ver los productos de la lista seleccionada.\n\nPuedes eliminar la lista si ya no la necesitas.\n\nSi deseas volver a comprar los mismos productos, usa el botón 'Agregar' para llevar esta lista a la pantalla de compras y marcar los productos que consigas.",
+                        text = "Esta es la lista que has seleccionado.\n\nPuedes eliminar la lista si ya no la necesitas.\n\nSi deseas volver a comprar los mismos productos, usa el botón 'Agregar'.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextColor,
                         modifier = Modifier.padding(bottom = 16.dp)
@@ -421,7 +423,8 @@ fun MyListsScreen(
         }
     }
 
-    if (showInstructions) {
+    // Mostrar diálogo de instrucciones solo si no se está inspeccionando una lista
+    if (showInstructions && !(showDialog && selectedList != null)) {
         Dialog(onDismissRequest = { showInstructions = false }) {
             Card(
                 modifier = Modifier
@@ -442,7 +445,7 @@ fun MyListsScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "- Puedes ver las listas que has creado.\n\n- Usa el botón 'Eliminar' para borrar una lista que ya no necesites.\n\n- Usa el botón 'Agregar' para volver a comprar los productos de esa lista en la pantalla de compras.",
+                        text = "- Selecciona la lista que deseas inspeccionar.\n\n - Usa el botón 'Eliminar' para borrar una lista que ya no necesites.\n\n- Usa el botón 'Agregar' para volver a comprar los productos de esa lista en la pantalla de compras.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = TextColor
                     )
