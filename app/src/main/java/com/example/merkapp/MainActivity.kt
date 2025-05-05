@@ -50,6 +50,10 @@ class MainActivity : ComponentActivity() {
                         composable("forgot_password") {
                             ForgotPasswordScreen(navController)
                         }
+                        composable("contact") {
+                            ContactScreen()
+                        }
+
                         composable("main") {
                             if (!userState.isLoggedIn) {
                                 LaunchedEffect(Unit) {

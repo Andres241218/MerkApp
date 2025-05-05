@@ -14,6 +14,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import com.example.merkapp.ui.viewmodels.ThemeViewModel
+import androidx.compose.material.icons.filled.Info
 
 private val BackgroundColor = Color(0xFFDEB887) // #DEB887
 private val ButtonColor = Color(0xFFCE8540)     // #CE8540
@@ -24,6 +25,8 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
     object Home : BottomNavItem("main", Icons.Default.Home, "Inicio")
     object Lists : BottomNavItem("my_lists", Icons.Default.List, "Mis Listas")
     object Config : BottomNavItem("config", Icons.Default.Settings, "Configuración")
+    object Contact : BottomNavItem("contact", Icons.Default.Info, "Contacto")
+
 }
 
 @Composable
@@ -40,7 +43,8 @@ fun BottomNavBar(
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Lists,
-        BottomNavItem.Config
+        BottomNavItem.Config,
+        BottomNavItem.Contact,
     )
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
