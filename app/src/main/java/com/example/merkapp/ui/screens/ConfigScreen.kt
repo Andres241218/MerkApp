@@ -32,9 +32,6 @@ import kotlinx.coroutines.runBlocking
 import androidx.compose.foundation.clickable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.merkapp.data.ScreenPreferences
-import android.util.Log
-
-private const val TAG = "ConfigScreen"
 
 // Definición de colores personalizados
 private val BackgroundColor = Color(0xFFDEB887) // #DEB887
@@ -82,13 +79,9 @@ fun ConfigScreen(
 
     // Show instructions only on the first visit
     LaunchedEffect(Unit) {
-        Log.d(TAG, "LaunchedEffect triggered")
         if (!screenPreferences.hasSeenScreen(ScreenPreferences.CONFIG_SCREEN_SEEN)) {
-            Log.d(TAG, "First visit to ConfigScreen, showing instructions")
             showInfoDialog = true
             screenPreferences.markScreenAsSeen(ScreenPreferences.CONFIG_SCREEN_SEEN)
-        } else {
-            Log.d(TAG, "ConfigScreen already visited")
         }
     }
 
@@ -97,6 +90,16 @@ fun ConfigScreen(
         if (emailChanged) {
             currentPassword = viewModel.getUserPassword() ?: ""
         }
+    }
+
+    // Validación de email
+    fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    // Validación de contraseña
+    fun isValidPassword(password: String): Boolean {
+        return password.length >= 6
     }
 
     Surface(
@@ -296,6 +299,14 @@ fun ConfigScreen(
                     onClick = {
                         if (emailChanged) {
                             when {
+                                !isValidEmail(email) -> {
+                                    errorMessage = "Por favor, introduce un email válido"
+                                    showErrorDialog = true
+                                }
+                                !isValidPassword(newPassword) -> {
+                                    errorMessage = "La contraseña debe tener al menos 6 caracteres"
+                                    showErrorDialog = true
+                                }
                                 newPassword != confirmPassword -> {
                                     errorMessage = "Las contraseñas no coinciden"
                                     showErrorDialog = true
@@ -305,39 +316,67 @@ fun ConfigScreen(
                                     showErrorDialog = true
                                 }
                                 else -> {
-                                    if (viewModel.updateUser(name, email, currentPassword, newPassword)) {
-                                        if (rememberMe) {
-                                            runBlocking {
-                                                userViewModel.dataStore.edit { preferences ->
-                                                    preferences[EMAIL_KEY] = email
-                                                    preferences[PASSWORD_KEY] = newPassword
+                                    try {
+                                        if (viewModel.updateUser(name, email, currentPassword, newPassword)) {
+                                            if (rememberMe) {
+                                                runBlocking {
+                                                    try {
+                                                        userViewModel.dataStore.edit { preferences ->
+                                                            preferences[EMAIL_KEY] = email
+                                                            preferences[PASSWORD_KEY] = newPassword
+                                                        }
+                                                    } catch (e: Exception) {
+                                                        errorMessage = "Error al guardar las credenciales: ${e.message}"
+                                                        showErrorDialog = true
+                                                        return@runBlocking
+                                                    }
                                                 }
                                             }
+                                            showSuccessDialog = true
+                                            currentPassword = ""
+                                            newPassword = ""
+                                            confirmPassword = ""
+                                        } else {
+                                            errorMessage = "Contraseña actual incorrecta"
+                                            showErrorDialog = true
                                         }
-                                        showSuccessDialog = true
-                                        currentPassword = ""
-                                        newPassword = ""
-                                        confirmPassword = ""
-                                    } else {
-                                        errorMessage = "Contraseña actual incorrecta"
+                                    } catch (e: Exception) {
+                                        errorMessage = "Error al actualizar los datos: ${e.message}"
                                         showErrorDialog = true
                                     }
                                 }
                             }
                         } else {
                             // Solo actualiza nombre y correo
-                            if (viewModel.updateUser(name, email, "", "")) {
-                                if (rememberMe) {
-                                    runBlocking {
-                                        userViewModel.dataStore.edit { preferences ->
-                                            preferences[EMAIL_KEY] = email
-                                            preferences[PASSWORD_KEY] = viewModel.getUserPassword() ?: ""
+                            if (!isValidEmail(email)) {
+                                errorMessage = "Por favor, introduce un email válido"
+                                showErrorDialog = true
+                                return@Button
+                            }
+                            
+                            try {
+                                if (viewModel.updateUser(name, email, "", "")) {
+                                    if (rememberMe) {
+                                        runBlocking {
+                                            try {
+                                                userViewModel.dataStore.edit { preferences ->
+                                                    preferences[EMAIL_KEY] = email
+                                                    preferences[PASSWORD_KEY] = viewModel.getUserPassword() ?: ""
+                                                }
+                                            } catch (e: Exception) {
+                                                errorMessage = "Error al guardar las credenciales: ${e.message}"
+                                                showErrorDialog = true
+                                                return@runBlocking
+                                            }
                                         }
                                     }
+                                    showSuccessDialog = true
+                                } else {
+                                    errorMessage = "Error al actualizar los datos"
+                                    showErrorDialog = true
                                 }
-                                showSuccessDialog = true
-                            } else {
-                                errorMessage = "Error al actualizar los datos"
+                            } catch (e: Exception) {
+                                errorMessage = "Error al actualizar los datos: ${e.message}"
                                 showErrorDialog = true
                             }
                         }

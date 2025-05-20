@@ -89,12 +89,17 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            if (uiState.error != null) {
+            uiState.error?.let { errorMessage ->
                 Text(
-                    text = uiState.error!!,
+                    text = errorMessage,
                     color = Color.Red,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
+            }
+
+            // Validación de email
+            fun isValidEmail(email: String): Boolean {
+                return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
             }
 
             OutlinedTextField(
@@ -103,6 +108,12 @@ fun LoginScreen(
                 label = { Text("Correo electrónico", color = if (isDarkMode) Color.White else Color.Black) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                isError = email.isNotEmpty() && !isValidEmail(email),
+                supportingText = {
+                    if (email.isNotEmpty() && !isValidEmail(email)) {
+                        Text("Email inválido", color = Color.Red)
+                    }
+                },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = CardColor,
                     unfocusedContainerColor = CardColor,
@@ -124,7 +135,12 @@ fun LoginScreen(
                 label = { Text("Contraseña", color = if (isDarkMode) Color.White else Color.Black) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                isError = password.isNotEmpty() && password.length < 6,
+                supportingText = {
+                    if (password.isNotEmpty() && password.length < 6) {
+                        Text("La contraseña debe tener al menos 6 caracteres", color = Color.Red)
+                    }
+                },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = CardColor,
                     unfocusedContainerColor = CardColor,
@@ -138,10 +154,20 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { userViewModel.login(email, password) },
+                onClick = {
+                    if (!isValidEmail(email)) {
+                        // Mostrar error de email inválido
+                        return@Button
+                    }
+                    if (password.length < 6) {
+                        // Mostrar error de contraseña inválida
+                        return@Button
+                    }
+                    userViewModel.login(email, password)
+                },
                 enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ButtonColor,

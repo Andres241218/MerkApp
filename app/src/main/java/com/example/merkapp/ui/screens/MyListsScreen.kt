@@ -30,9 +30,6 @@ import com.example.merkapp.ui.viewmodels.ShoppingListViewModel
 import com.example.merkapp.ui.viewmodels.ThemeViewModel
 import com.example.merkapp.ui.viewmodels.UserViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import android.util.Log
-
-private const val TAG = "MyListsScreen"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,13 +59,9 @@ fun MyListsScreen(
     val screenPreferences = remember { ScreenPreferences(context) }
 
     LaunchedEffect(Unit) {
-        Log.d(TAG, "LaunchedEffect triggered")
         if (!screenPreferences.hasSeenScreen(ScreenPreferences.MY_LISTS_SCREEN_SEEN)) {
-            Log.d(TAG, "First visit to MyListsScreen, showing instructions")
             showInitialInstructions = true
             screenPreferences.markScreenAsSeen(ScreenPreferences.MY_LISTS_SCREEN_SEEN)
-        } else {
-            Log.d(TAG, "MyListsScreen already visited")
         }
     }
 

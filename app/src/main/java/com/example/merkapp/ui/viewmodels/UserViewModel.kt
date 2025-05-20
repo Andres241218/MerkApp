@@ -8,6 +8,8 @@ import com.example.merkapp.dataStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 
 data class UserState(
     val isLoading: Boolean = false,
@@ -24,23 +26,72 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            
-            val savedEmail = userPreferences.getUserEmail()
-            val savedPassword = userPreferences.getUserPassword()
-            
-            if (email == savedEmail && password == savedPassword) {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+                
+                // Validar email
+                if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Email inválido"
+                    )
+                    return@launch
+                }
+
+                // Validar contraseña
+                if (password.length < 6) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "La contraseña debe tener al menos 6 caracteres"
+                    )
+                    return@launch
+                }
+
+                // Obtener credenciales guardadas
+                val savedEmail = try {
+                    userPreferences.getUserEmail()
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Error al obtener las credenciales guardadas"
+                    )
+                    return@launch
+                }
+
+                val savedPassword = try {
+                    userPreferences.getUserPassword()
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Error al obtener las credenciales guardadas"
+                    )
+                    return@launch
+                }
+                
+                if (email == savedEmail && password == savedPassword) {
+                    val userName = try {
+                        userPreferences.getUserName()
+                    } catch (e: Exception) {
+                        null
+                    }
+                    
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isLoggedIn = true,
+                        error = null,
+                        userName = userName
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isLoggedIn = false,
+                        error = "Email o contraseña incorrectos"
+                    )
+                }
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    isLoggedIn = true,
-                    error = null,
-                    userName = userPreferences.getUserName()
-                )
-            } else {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isLoggedIn = false,
-                    error = "Email o contraseña incorrectos"
+                    error = "Error inesperado: ${e.message}"
                 )
             }
         }
