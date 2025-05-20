@@ -1,5 +1,6 @@
 package com.example.merkapp.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.merkapp.R
@@ -29,6 +31,10 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.runBlocking
 import androidx.compose.foundation.clickable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.merkapp.data.ScreenPreferences
+import android.util.Log
+
+private const val TAG = "ConfigScreen"
 
 // Definición de colores personalizados
 private val BackgroundColor = Color(0xFFDEB887) // #DEB887
@@ -48,6 +54,7 @@ fun ConfigScreen(
     themeViewModel: ThemeViewModel
 ) {
     val context = LocalContext.current
+    val screenPreferences = remember { ScreenPreferences(context) }
     val viewModel: ConfigViewModel = viewModel(factory = ConfigViewModel.Factory(context))
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
     var initialEmail by remember { mutableStateOf(viewModel.getUserEmail() ?: "") }
@@ -72,6 +79,18 @@ fun ConfigScreen(
     val panelColor = if (isDarkMode) DarkPanelColor else CardColor
     val logoRes = if (isDarkMode) R.drawable.icw_logo else R.drawable.logo
     val infoIcon = if (isDarkMode) R.drawable.icw_info else R.drawable.ic_info
+
+    // Show instructions only on the first visit
+    LaunchedEffect(Unit) {
+        Log.d(TAG, "LaunchedEffect triggered")
+        if (!screenPreferences.hasSeenScreen(ScreenPreferences.CONFIG_SCREEN_SEEN)) {
+            Log.d(TAG, "First visit to ConfigScreen, showing instructions")
+            showInfoDialog = true
+            screenPreferences.markScreenAsSeen(ScreenPreferences.CONFIG_SCREEN_SEEN)
+        } else {
+            Log.d(TAG, "ConfigScreen already visited")
+        }
+    }
 
     // Autollenar contraseña actual si cambia el correo
     LaunchedEffect(emailChanged) {
@@ -338,50 +357,76 @@ fun ConfigScreen(
             )
         }
     }
+
+    // Dialogs
     if (showInfoDialog) {
-        AlertDialog(
-            containerColor = backgroundColor,
-            onDismissRequest = { showInfoDialog = false },
-            title = { Text("Información", color = textColorValue) },
-            text = { Text("En esta pantalla puedes actualizar tu información personal y cambiar tu contraseña. Asegúrate de que la nueva contraseña sea segura y fácil de recordar.", color = textColorValue) },
-            confirmButton = {
-                Button(
-                    onClick = { showInfoDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
+        Dialog(onDismissRequest = { showInfoDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = backgroundColor
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Entendido", color = textColorValue)
+                    Text(
+                        text = "Instrucciones de Uso - Configuración",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = textColorValue,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Text(
+                        text = "Aquí puedes cambiar tu nombre, correo electrónico y contraseña.\n\nTambién puedes cambiar entre el modo claro y oscuro.\n\nRecuerda guardar los cambios para que se apliquen.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = textColorValue,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
+                    Button(
+                        onClick = { showInfoDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = buttonColor, contentColor = textColorValue)
+                    ) {
+                        Text("Entendido")
+                    }
                 }
             }
-        )
+        }
     }
+
     if (showSuccessDialog) {
         AlertDialog(
-            containerColor = backgroundColor,
             onDismissRequest = { showSuccessDialog = false },
             title = { Text("Éxito", color = textColorValue) },
-            text = { Text("Tus datos han sido actualizados correctamente.", color = textColorValue) },
+            text = { Text("Los cambios se han guardado correctamente.", color = textColorValue) },
             confirmButton = {
                 Button(
                     onClick = { showSuccessDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
+                    colors = ButtonDefaults.buttonColors(containerColor = buttonColor, contentColor = textColorValue)
                 ) {
-                    Text("Aceptar", color = textColorValue)
+                    Text("Aceptar")
                 }
             }
         )
     }
+
     if (showErrorDialog) {
         AlertDialog(
-            containerColor = backgroundColor,
             onDismissRequest = { showErrorDialog = false },
             title = { Text("Error", color = textColorValue) },
             text = { Text(errorMessage, color = textColorValue) },
             confirmButton = {
                 Button(
                     onClick = { showErrorDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
+                    colors = ButtonDefaults.buttonColors(containerColor = buttonColor, contentColor = textColorValue)
                 ) {
-                    Text("Aceptar", color = textColorValue)
+                    Text("Aceptar")
                 }
             }
         )

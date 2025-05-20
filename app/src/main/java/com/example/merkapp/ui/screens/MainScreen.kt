@@ -1,5 +1,6 @@
 package com.example.merkapp.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -21,10 +23,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import com.example.merkapp.R
+import com.example.merkapp.data.ScreenPreferences
 import com.example.merkapp.ui.components.BottomNavBar
 import com.example.merkapp.ui.viewmodels.UserViewModel
 import com.example.merkapp.ui.viewmodels.ThemeViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.util.Log
+
+private const val TAG = "MainScreen"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,10 +49,23 @@ fun MainScreen(
     val logoRes = remember(isDarkMode) { if (isDarkMode) R.drawable.icw_logo else R.drawable.logo }
     val infoIcon = if (isDarkMode) R.drawable.icw_info else R.drawable.ic_info
 
-    LaunchedEffect(Unit) {
-        userViewModel.refreshUser()
-    }
+    val context = LocalContext.current
+    val screenPreferences = remember { ScreenPreferences(context) }
+
     var showInstructions by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        Log.d(TAG, "LaunchedEffect triggered")
+        userViewModel.refreshUser()
+        if (!screenPreferences.hasSeenScreen(ScreenPreferences.MAIN_SCREEN_SEEN)) {
+            Log.d(TAG, "First visit to MainScreen, showing instructions")
+            showInstructions = true
+            screenPreferences.markScreenAsSeen(ScreenPreferences.MAIN_SCREEN_SEEN)
+        } else {
+            Log.d(TAG, "MainScreen already visited")
+        }
+    }
+    
     val scrollState = rememberScrollState()
     val uiState by userViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -248,14 +267,26 @@ fun MainScreen(
                                 color = PanelColor,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(
-                                    text = section,
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = TextColor,
-                                    modifier = Modifier.padding(16.dp)
-                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        section,
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = TextColor
+                                    )
+                                    Icon(
+                                        imageVector = if (expandedSections[section] ?: false) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                                        contentDescription = if (expandedSections[section] ?: false) "Contraer" else "Expandir",
+                                        tint = TextColor
+                                    )
+                                }
                             }
 
                             if (expandedSections[section] == true) {
@@ -309,9 +340,9 @@ fun MainScreen(
                                                     )
                                                     OutlinedTextField(
                                                         value = quantity,
-                                                        onValueChange = {
-                                                            quantity = it
-                                                            productSelections[product] = (it.isNotBlank() to it)
+                                                        onValueChange = { newValue ->
+                                                            quantity = newValue
+                                                            productSelections[product] = (newValue.isNotBlank() to newValue)
                                                         },
                                                         label = {
                                                             Text(
@@ -338,7 +369,7 @@ fun MainScreen(
                                 }
                             }
                         }
-                    }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -347,7 +378,7 @@ fun MainScreen(
                     onClick = {
                         try {
                             val selectedItems = productSelections.toMap().filter {
-                                it.value.first // Solo productos con cantidad ingresada
+                                it.value.first 
                             }
                             navController.currentBackStackEntry?.savedStateHandle?.set(
                                 "selectedItems",
@@ -374,7 +405,7 @@ fun MainScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp)) // Espacio extra al final
+                Spacer(modifier = Modifier.height(32.dp))
             }
 
             // El menú de navegación siempre estará en la parte inferior
@@ -390,59 +421,54 @@ fun MainScreen(
 private fun getProductIconResource(product: String, themeViewModel: ThemeViewModel): Int {
     val prefix = themeViewModel.getIconPrefix()
     return when (product.lowercase()) {
-        // Proteínas
-        "carne" -> getResourceId("${prefix}carne")
-        "pollo" -> getResourceId("${prefix}pollo")
-        "pescado" -> getResourceId("${prefix}pescado")
-        "huevos" -> getResourceId("${prefix}huevos")
+        "carne" -> getResourceId("$prefix" + "carne")
+        "pollo" -> getResourceId("$prefix" + "pollo")
+        "pescado" -> getResourceId("$prefix" + "pescado")
+        "huevos" -> getResourceId("$prefix" + "huevos")
 
-        // Víveres
-        "avena" -> getResourceId("${prefix}avena")
-        "azúcar" -> getResourceId("${prefix}azucar")
-        "sal" -> getResourceId("${prefix}sal")
-        "maíz" -> getResourceId("${prefix}maiz")
-        "aceite" -> getResourceId("${prefix}aceite")
-        "te" -> getResourceId("${prefix}te")
-        "cafe" -> getResourceId("${prefix}cafe")
-        "galletas" -> getResourceId("${prefix}galletas")
-        "tostadas" -> getResourceId("${prefix}tostadas")
+        "avena" -> getResourceId("$prefix" + "avena")
+        "azúcar" -> getResourceId("$prefix" + "azucar")
+        "sal" -> getResourceId("$prefix" + "sal")
+        "maíz" -> getResourceId("$prefix" + "maiz")
+        "aceite" -> getResourceId("$prefix" + "aceite")
+        "te" -> getResourceId("$prefix" + "te")
+        "cafe" -> getResourceId("$prefix" + "cafe")
+        "galletas" -> getResourceId("$prefix" + "galletas")
+        "tostadas" -> getResourceId("$prefix" + "tostadas")
 
-        // Frutas y verduras
-        "pera" -> getResourceId("${prefix}pera")
-        "piña" -> getResourceId("${prefix}pina")
-        "banano" -> getResourceId("${prefix}banano")
-        "arándanos" -> getResourceId("${prefix}arandanos")
-        "sandia" -> getResourceId("${prefix}sandia")
-        "mango" -> getResourceId("${prefix}mango")
-        "uvas" -> getResourceId("${prefix}uvas")
-        "manzanas" -> getResourceId("${prefix}manzana")
-        "espinacas" -> getResourceId("${prefix}espinacas")
-        "brócoli" -> getResourceId("${prefix}brocoli")
-        "zanahoria" -> getResourceId("${prefix}zanahoria")
-        "lechuga" -> getResourceId("${prefix}lechuga")
-        "tomate" -> getResourceId("${prefix}tomate")
-        "apio" -> getResourceId("${prefix}apio")
-        "pepino" -> getResourceId("${prefix}pepino")
-        "ahuyama" -> getResourceId("${prefix}ahuyama")
+        "pera" -> getResourceId("$prefix" + "pera")
+        "piña" -> getResourceId("$prefix" + "pina")
+        "banano" -> getResourceId("$prefix" + "banano")
+        "arándanos" -> getResourceId("$prefix" + "arandanos")
+        "sandia" -> getResourceId("$prefix" + "sandia")
+        "mango" -> getResourceId("$prefix" + "mango")
+        "uvas" -> getResourceId("$prefix" + "uvas")
+        "manzanas" -> getResourceId("$prefix" + "manzana")
+        "espinacas" -> getResourceId("$prefix" + "espinacas")
+        "brócoli" -> getResourceId("$prefix" + "brocoli")
+        "zanahoria" -> getResourceId("$prefix" + "zanahoria")
+        "lechuga" -> getResourceId("$prefix" + "lechuga")
+        "tomate" -> getResourceId("$prefix" + "tomate")
+        "apio" -> getResourceId("$prefix" + "apio")
+        "pepino" -> getResourceId("$prefix" + "pepino")
+        "ahuyama" -> getResourceId("$prefix" + "ahuyama")
 
-        // Aseo
-        "escoba" -> getResourceId("${prefix}escoba")
-        "recogedor" -> getResourceId("${prefix}recogedor")
-        "esponjas" -> getResourceId("${prefix}esponjas")
-        "guantes" -> getResourceId("${prefix}guantes")
-        "limpia vidrios" -> getResourceId("${prefix}limpiavidrios")
-        "trapeador" -> getResourceId("${prefix}trapeador")
+        "escoba" -> getResourceId("$prefix" + "escoba")
+        "recogedor" -> getResourceId("$prefix" + "recogedor")
+        "esponjas" -> getResourceId("$prefix" + "esponjas")
+        "guantes" -> getResourceId("$prefix" + "guantes")
+        "limpia vidrios" -> getResourceId("$prefix" + "limpiavidrios")
+        "trapeador" -> getResourceId("$prefix" + "trapeador")
 
-        // Lácteos
-        "leche" -> getResourceId("${prefix}leche")
-        "queso" -> getResourceId("${prefix}queso")
-        "yogurt" -> getResourceId("${prefix}yogurt")
-        "mantequilla" -> getResourceId("${prefix}mantequilla")
-        "crema de leche" -> getResourceId("${prefix}crema_leche")
-        "kumis" -> getResourceId("${prefix}kumis")
+        "leche" -> getResourceId("$prefix" + "leche")
+        "queso" -> getResourceId("$prefix" + "queso")
+        "yogurt" -> getResourceId("$prefix" + "yogurt")
+        "mantequilla" -> getResourceId("$prefix" + "mantequilla")
+        "crema de leche" -> getResourceId("$prefix" + "crema_leche")
+        "kumis" -> getResourceId("$prefix" + "kumis")
 
-        // Ícono por defecto
-        else -> getResourceId("${prefix}producto_default")
+        "producto_default" -> R.drawable.ic_producto_default
+        else -> R.drawable.ic_producto_default
     }
 }
 

@@ -1,5 +1,6 @@
 package com.example.merkapp.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -21,12 +23,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import com.example.merkapp.R
+import com.example.merkapp.data.ScreenPreferences
 import com.example.merkapp.data.ShoppingList
 import com.example.merkapp.ui.components.BottomNavBar
 import com.example.merkapp.ui.viewmodels.ShoppingListViewModel
 import com.example.merkapp.ui.viewmodels.ThemeViewModel
 import com.example.merkapp.ui.viewmodels.UserViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.util.Log
+
+private const val TAG = "MyListsScreen"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +56,21 @@ fun MyListsScreen(
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showDeleteSuccessDialog by remember { mutableStateOf(false) }
     var showInstructions by remember { mutableStateOf(false) }
+    var showInitialInstructions by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val screenPreferences = remember { ScreenPreferences(context) }
+
+    LaunchedEffect(Unit) {
+        Log.d(TAG, "LaunchedEffect triggered")
+        if (!screenPreferences.hasSeenScreen(ScreenPreferences.MY_LISTS_SCREEN_SEEN)) {
+            Log.d(TAG, "First visit to MyListsScreen, showing instructions")
+            showInitialInstructions = true
+            screenPreferences.markScreenAsSeen(ScreenPreferences.MY_LISTS_SCREEN_SEEN)
+        } else {
+            Log.d(TAG, "MyListsScreen already visited")
+        }
+    }
 
     LaunchedEffect(showDialog) {
         if (!showDialog) {
@@ -435,8 +456,11 @@ fun MyListsScreen(
     }
 
     // Mostrar diálogo de instrucciones solo si no se está inspeccionando una lista
-    if (showInstructions && !(showDialog && selectedList != null)) {
-        Dialog(onDismissRequest = { showInstructions = false }) {
+    if (showInitialInstructions || (showInstructions && !(showDialog && selectedList != null))) {
+        Dialog(onDismissRequest = {
+            showInstructions = false
+            showInitialInstructions = false
+        }) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -462,7 +486,10 @@ fun MyListsScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { showInstructions = false },
+                        onClick = {
+                            showInstructions = false
+                            showInitialInstructions = false
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = ButtonColor,
                             contentColor = TextColor
